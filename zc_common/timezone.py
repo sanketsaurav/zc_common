@@ -133,8 +133,16 @@ def parse(date_string, **kwargs):
     """ A wrapper around python-dateutil's parse function which ensures it always returns an aware datetime """
     from dateutil.parser import parse as datetime_parser
     from django.utils.timezone import is_aware, make_aware
+    from dateutil.tz import *
 
-    parsed = datetime_parser(date_string, **kwargs)
+    tzinfos = {'EDT': tzfile('/usr/share/zoneinfo/America/New_York'),
+               'EST': tzfile('/usr/share/zoneinfo/America/New_York'),
+               'CDT': tzfile('/usr/share/zoneinfo/America/Chicago'),
+               'CST': tzfile('/usr/share/zoneinfo/America/Chicago'),
+               'PDT': tzfile('/usr/share/zoneinfo/America/Los_Angeles'),
+               'PST': tzfile('/usr/share/zoneinfo/America/Los_Angeles')}
+
+    parsed = datetime_parser(date_string, tzinfos=tzinfos, **kwargs)
     # Make aware
     parsed = parsed if is_aware(parsed) else make_aware(parsed, _get_tz())
     # Ensure that we have the correct offset, while also keeping what was passed in.
