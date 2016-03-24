@@ -105,6 +105,22 @@ def get_timezone_offset(value):
     return _get_datetime_from_ambiguous_value(value).strftime('%z')
 
 
+def timezone_abbrv_mappings():
+    """
+    By default, dateutil doesn't parse at least `EDT` correctly.
+    Pass output of this function as `tzinfos` param to parse() if it isn't pickin up timezone correctly.
+    """
+    from dateutil.tz import *
+    return {'EDT': gettz('America/New_York'),
+            'EST': gettz('America/New_York'),
+            'CDT': gettz('America/Chicago'),
+            'CST': gettz('America/Chicago'),
+            'MDT': gettz('America/Denver'),
+            'MST': gettz('America/Denver'),
+            'PDT': gettz('America/Los_Angeles'),
+            'PST': gettz('America/Los_Angeles')}
+
+
 def _get_datetime_from_ambiguous_value(value):
     if type(value) is python_datetime.datetime:
         new_datetime = localtime(value, tz=value.tzinfo)
