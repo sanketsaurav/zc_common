@@ -115,6 +115,8 @@ def timezone_abbrv_mappings():
             'EST': gettz('America/New_York'),
             'CDT': gettz('America/Chicago'),
             'CST': gettz('America/Chicago'),
+            'MDT': gettz('America/Denver'),
+            'MST': gettz('America/Denver'),
             'PDT': gettz('America/Los_Angeles'),
             'PST': gettz('America/Los_Angeles')}
 
