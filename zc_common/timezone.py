@@ -105,6 +105,20 @@ def get_timezone_offset(value):
     return _get_datetime_from_ambiguous_value(value).strftime('%z')
 
 
+def timezone_abbrv_mappings():
+    """
+    By default, dateutil doesn't parse at least `EDT` correctly.
+    Pass output of this function as `tzinfos` param to parse() if it isn't pickin up timezone correctly.
+    """
+    from dateutil.tz import *
+    return {'EDT': gettz('America/New_York'),
+            'EST': gettz('America/New_York'),
+            'CDT': gettz('America/Chicago'),
+            'CST': gettz('America/Chicago'),
+            'PDT': gettz('America/Los_Angeles'),
+            'PST': gettz('America/Los_Angeles')}
+
+
 def _get_datetime_from_ambiguous_value(value):
     if type(value) is python_datetime.datetime:
         new_datetime = localtime(value, tz=value.tzinfo)
@@ -133,16 +147,8 @@ def parse(date_string, **kwargs):
     """ A wrapper around python-dateutil's parse function which ensures it always returns an aware datetime """
     from dateutil.parser import parse as datetime_parser
     from django.utils.timezone import is_aware, make_aware
-    from dateutil.tz import *
 
-    tzinfos = {'EDT': tzfile('/usr/share/zoneinfo/America/New_York'),
-               'EST': tzfile('/usr/share/zoneinfo/America/New_York'),
-               'CDT': tzfile('/usr/share/zoneinfo/America/Chicago'),
-               'CST': tzfile('/usr/share/zoneinfo/America/Chicago'),
-               'PDT': tzfile('/usr/share/zoneinfo/America/Los_Angeles'),
-               'PST': tzfile('/usr/share/zoneinfo/America/Los_Angeles')}
-
-    parsed = datetime_parser(date_string, tzinfos=tzinfos, **kwargs)
+    parsed = datetime_parser(date_string, **kwargs)
     # Make aware
     parsed = parsed if is_aware(parsed) else make_aware(parsed, _get_tz())
     # Ensure that we have the correct offset, while also keeping what was passed in.
