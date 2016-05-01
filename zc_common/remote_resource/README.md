@@ -10,7 +10,7 @@ Specifically, this package contains helpers for extending the JSON API package's
 
 ## RemoteForeignKey (models)
 
-This is a model field that implements the format we have defined for how microservices will store relations to remote services. The `RemoteForeignKey` field overrides the default `CharField` and adds the additional constraints of capping the `max_length` at 50, adds a `db_index`, and uses a database column of `<fieldname>_id` by default.
+This is a model field that implements the format we have defined for how microservices will store relations to remote services. The `RemoteForeignKey` field overrides the default `CharField` and adds the additional constraints of capping the `max_length` at 50, adds a `db_index`, and uses a database column of `<resource_type>_id` by default (where resource_type is passed in the field declaration).
 
 Example usage:
 
@@ -39,8 +39,16 @@ In Serializers (using the RemoteResourceField)
 
 ```python
 class ShippingCompanyModelSerializer(serializers.ModelSerializer):
-    billing_address = RemoteResourceRelatedField()
-    pickup_address = RemoteResourceRelatedField()
+    billing_address = RemoteResourceRelatedField(
+        related_link_view_name='address-detail',
+        related_link_url_kwarg='pk',
+        self_link_view_name='company-relationships',
+    )
+    pickup_address = RemoteResourceRelatedField(
+        related_link_view_name='address-detail',
+        related_link_url_kwarg='pk',
+        self_link_view_name='company-relationships',
+    )
 
     class Meta:
         model = ShippingCompany
@@ -54,15 +62,15 @@ from rest_framework import viewsets
 from rest_framework_json_api.views import RelationshipView
 
 from companies.models import ShippingCompany
-from companies.serializers import SCompanyModelSerializer
+from companies.serializers import ShippingCompanyModelSerializer
 
 
 class CompanyView(viewsets.ModelViewSet):
     queryset = ShippingCompany.objects.all()
-    serializer_class = SCompanyModelSerializer
+    serializer_class = ShippingCompanyModelSerializer
 
 
-class SCompanyRelationshipView(RelationshipView):
+class ShippingCompanyRelationshipView(RelationshipView):
     queryset = ShippingCompany.objects.all()
 
 
@@ -84,8 +92,8 @@ urlpatterns = [
 	url(r'^', include(router.urls)),
 	url(
 		regex=r'^companies/(?P<pk>[^/.]+)/relationships/(?P<related_field>[^/.]+)$',
-		view=company_views.SCompanyRelationshipView.as_view(),
-		name='scompany-relationships'
+		view=company_views.ShippingCompanyRelationshipView.as_view(),
+		name='company-relationships'
 	),
 	url(  # This is a dummy route to the remote resource
 		regex=r'^addresses/(?P<pk>[^/.]+)/$',
