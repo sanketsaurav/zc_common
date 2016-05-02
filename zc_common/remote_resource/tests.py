@@ -5,8 +5,8 @@ from rest_framework.test import APITestCase
 
 
 class ResponseTestCase(APITestCase):
-    SUCCESS_HIGH_LEVEL_KEYS = ["data", "meta", "links"]
-    SUCCESS_DATA_KEYS = ["id", "type", "attributes"]
+    SUCCESS_HIGH_LEVEL_KEYS = ["data"]
+    SUCCESS_DATA_KEYS = ["id", "type"]
 
     FAILURE_HIGH_LEVEL_KEYS = ["errors"]
     FAILURE_DATA_KEYS = ["status", "source", "detail"]
@@ -24,7 +24,7 @@ class ResponseTestCase(APITestCase):
             if relationship_keys:
                 self.assertTrue("relationships" in data)
                 relationships = data["relationships"]
-                self.assertTrue(all(key in relationships for key in ["dietaryRestrictions", "dishVariations"]))
+                self.assertTrue(all(key in relationships for key in relationship_keys))
 
                 for relationship_name, relationship in relationships.iteritems():
                     self.assertTrue(all(key in relationship for key in ["data", "meta"]))
