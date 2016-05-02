@@ -5,11 +5,11 @@ from rest_framework.test import APITestCase
 
 
 class ResponseTestCase(APITestCase):
-    SUCCESS_HIGH_LEVEL_KEYS = ["data"]
-    SUCCESS_DATA_KEYS = ["id", "type"]
+    SUCCESS_HIGH_LEVEL_KEYS = ['data']
+    SUCCESS_DATA_KEYS = ['id', 'type']
 
-    FAILURE_HIGH_LEVEL_KEYS = ["errors"]
-    FAILURE_DATA_KEYS = ["status", "source", "detail"]
+    FAILURE_HIGH_LEVEL_KEYS = ['errors']
+    FAILURE_DATA_KEYS = ['status', 'source', 'detail']
 
     def success_response_structure_test(self, response, status, relationship_keys=None):
         self.assertEqual(response.status_code, status)
@@ -18,19 +18,19 @@ class ResponseTestCase(APITestCase):
 
         self.assertTrue(all(key in response_content for key in self.SUCCESS_HIGH_LEVEL_KEYS))
 
-        for data in response_content["data"]:
+        for data in response_content['data']:
             self.assertTrue(all(key in data for key in self.SUCCESS_DATA_KEYS))
 
             if relationship_keys:
-                self.assertTrue("relationships" in data)
-                relationships = data["relationships"]
+                self.assertTrue('relationships' in data)
+                relationships = data['relationships']
                 self.assertTrue(all(key in relationships for key in relationship_keys))
 
                 for relationship_name, relationship in relationships.iteritems():
-                    self.assertTrue(all(key in relationship for key in ["data", "meta"]))
+                    self.assertTrue(all(key in relationship for key in ['data', 'meta']))
 
-                    for relationship_data in relationship["data"]:
-                        self.assertTrue(all(key in relationship_data for key in ["type", "id"]))
+                    for relationship_data in relationship['data']:
+                        self.assertTrue(all(key in relationship_data for key in ['type', 'id']))
 
     def failure_response_structure_test(self, response, status):
         self.assertEqual(response.status_code, status)
@@ -39,7 +39,7 @@ class ResponseTestCase(APITestCase):
 
         self.assertTrue(all(key in response_content for key in self.FAILURE_HIGH_LEVEL_KEYS))
 
-        for error in response_content["errors"]:
+        for error in response_content['errors']:
             self.assertTrue(all(key in error for key in self.FAILURE_DATA_KEYS))
 
     def load_json(self, response):

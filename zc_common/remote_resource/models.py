@@ -10,6 +10,7 @@ class RemoteResource(object):
         self.type = type_name
         self.id = id
 
+
 class RemoteForeignKey(models.CharField):
     description = "A foreign key pointing to an external resource"
 
@@ -47,6 +48,6 @@ class RemoteForeignKey(models.CharField):
 
         args = tuple([self.type] + list(args))
 
-        del kwargs["max_length"]
+        del kwargs['max_length']
 
         return name, path, args, kwargs
