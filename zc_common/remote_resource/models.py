@@ -35,7 +35,7 @@ class RemoteForeignKey(models.CharField):
         if isinstance(value, RemoteResource):
             return value.id
 
-        if isinstance(value, str):
+        if isinstance(value, basestring):
             return value
 
         if value is None:
