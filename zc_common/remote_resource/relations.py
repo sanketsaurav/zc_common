@@ -15,7 +15,7 @@ class RemoteResourceField(ResourceRelatedField):
         if not kwargs.get('read_only', None):
             # The queryset is required to be not None, but not used
             #   due to the overriding of the methods below.
-            kwargs['queryset'] = True
+            kwargs['queryset'] = {}
         super(RemoteResourceField, self).__init__(*args, **kwargs)
 
     def to_internal_value(self, data):
