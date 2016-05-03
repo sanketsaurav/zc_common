@@ -8,6 +8,32 @@ Specifically, this package contains helpers for extending the JSON API package's
 
 **Note: There's some uncertainty about polymorphic model handling by the JSON API module that still needs to be investigated (Although there is an [open pull request](https://github.com/django-json-api/django-rest-framework-json-api/pull/211) to address this).**
 
+## Using JSON API with Django Rest Framework
+
+In order to get the Rest Framework and JSON API working properly, add the following to the bottom of your `settings.py` file:
+
+```python
+REST_FRAMEWORK = {
+    'PAGE_SIZE': 10,
+    'EXCEPTION_HANDLER': 'rest_framework_json_api.exceptions.exception_handler',
+    'DEFAULT_PAGINATION_CLASS':
+        'zc_common.remote_resource.pagination.PageNumberPagination',
+    'DEFAULT_PARSER_CLASSES': (
+        'rest_framework_json_api.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser'
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework_json_api.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ),
+    'DEFAULT_METADATA_CLASS': 'rest_framework_json_api.metadata.JSONAPIMetadata',
+}
+
+JSON_API_FORMAT_KEYS = 'camelize'
+
+```
+
 ## RemoteForeignKey (models)
 
 This is a model field that implements the format we have defined for how microservices will store relations to remote services. The `RemoteForeignKey` field overrides the default `CharField` and adds the additional constraints of capping the `max_length` at 50, adds a `db_index`, and uses a database column of `<resource_type>_id` by default (where resource_type is passed in the field declaration).
@@ -111,8 +137,19 @@ urlpatterns = [
 
 It also defines a `load_json(response)` method to use when converting the response back to json for further verification.
 
+## PageNumberPagination (pagination)
+
+We have created a custom paginator to include the `self` link to GET responses to collections. The default one included in the JSON API package does not include this link. The content of our paginator is nearly a complete copy/paste of the JSON API paginator, with the exception of creating the self_url and adding it to the response.
+
+To use this paginator instead of the default one, modify the `DEFAULT_PAGINATION_CLASS` setting in your `settings.py` file to `'zc_common.remote_resource.pagination.PageNumberPagination',` (this is already the case if you copied the block at the top of this README into your settings file).
+
 ## ToDo/Known Issues
 
 * Following the relationship `self` link from within the service (e.g. `/companies/1/relationships/billing_addres`) currently throws an error.
-* GET requests to collections do not currently provide a `self` link of where the collection resource can be fetched from. (e.g. a GET request to `/companies` needs to return a top level 'links' object that contains a self link to `/companies`.
 * Investigate how JSON API package deals with polymorphic models and whether the open PR will address the issue.
+ * A GET request to a base model collection will correctly identify the `type` of each object, however only common fields covered by the default serializer will be included in the output.
+* Investigate that JSON API package is handling POST and PATCH requests for related resources according to the spec (currently only tested for non-Remote related items until the relationship link issue above is resolved).
+ * PATCH request updating to-many relationships will correctly replace the the entire relationship with the content of the array of resource identifier objects passed in the request (incorrectly returns a 200 response with the representation of the updated relationship).
+ * PATCH requests made to the relationship link (such as `/articles/1/relationships/comments`) updating to-one and to-many relationships with an empty data object to clear the relationship (e.g. `{ data: None }` and `{ data: [] }`) are incorrectly rejected by the server with a 400 error for not passing primary data. This is correctly handled for PATCH actions made to the detail object directly (for example, `/comments/1`).
+ * POST requests to to-many relationship links work correctly (add relationship items posted in addition to the items already in the relationship instead of replacing as is the case with PATCH); POST requests made to to-one relationship links correctly prohibit the action (PATCH requests are acceptable and work correctly aside from the clearing issue mentioned above).
+ * DELETE requests to relationship links are handled correctly.
