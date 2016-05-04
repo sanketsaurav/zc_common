@@ -10,6 +10,8 @@ Specifically, this package contains helpers for extending the JSON API package's
 
 ## Using JSON API with Django Rest Framework
 
+zc_common does not contain any dependencies for the related resources at the package level, so make sure that you have `django`, `djangorestframework`, `djangorestframework-jsonapi` installed.
+
 In order to get the Rest Framework and JSON API working properly, add the following to the bottom of your `settings.py` file:
 
 ```python
@@ -66,14 +68,12 @@ In Serializers (using the RemoteResourceField)
 ```python
 class ShippingCompanyModelSerializer(serializers.ModelSerializer):
     billing_address = RemoteResourceRelatedField(
-        related_link_view_name='address-detail',
-        related_link_url_kwarg='pk',
         self_link_view_name='company-relationships',
+        related_resource_path='/addresses/{pk}'
     )
     pickup_address = RemoteResourceRelatedField(
-        related_link_view_name='address-detail',
-        related_link_url_kwarg='pk',
         self_link_view_name='company-relationships',
+        related_resource_path='/addresses/{pk}'
     )
 
     class Meta:
@@ -98,13 +98,6 @@ class CompanyView(viewsets.ModelViewSet):
 
 class ShippingCompanyRelationshipView(RelationshipView):
     queryset = ShippingCompany.objects.all()
-
-
-def remote_resource(request):
-	"""
-	Dummy route that will never be hit.
-	"""
-    pass
 ```
 In Urls:
 
@@ -120,11 +113,6 @@ urlpatterns = [
 		regex=r'^companies/(?P<pk>[^/.]+)/relationships/(?P<related_field>[^/.]+)$',
 		view=company_views.ShippingCompanyRelationshipView.as_view(),
 		name='company-relationships'
-	),
-	url(  # This is a dummy route to the remote resource
-		regex=r'^addresses/(?P<pk>[^/.]+)/$',
-		view=company_views.remote_resource,
-		name='address-detail'
 	),
 ]
 ```
