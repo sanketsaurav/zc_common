@@ -10,19 +10,7 @@ Specifically, this package contains helpers for extending the JSON API package's
 
 ## Using JSON API with Django Rest Framework
 
-zc_common does not contain any dependencies for the related resources at the package level, so make sure that you have `django`, `djangorestframework`, `djangorestframework-jsonapi` installed.
-
-To install (until the pull request gets merged into zc_common), add the following line to your requirements file:
-
-```
--e git+http://github.com/ZeroCater/zc_common.git@remote_resource#egg=zc_common
-```
-
-And verify that your service's Dockerfile has a line that reads:
-
-```
-RUN pip install --src=/pip-install -r requirements.txt
-```
+zc_common does not contain any dependencies for the related resources at the package level, so make sure that you have `django`, `djangorestframework`, `djangorestframework-jsonapi` installed (and, of course, zc_common).
 
 In order to get the Rest Framework and JSON API working properly, add the following to the bottom of your `settings.py` file:
 
@@ -47,6 +35,8 @@ REST_FRAMEWORK = {
 JSON_API_FORMAT_KEYS = 'camelize'
 
 ```
+
+You can optionally add `'rest_framework'` to your list of `INSTALLED_APPS` in your Django settings to get access to the Django Rest Framework's browsable API during development.
 
 ## RemoteForeignKey (models)
 
