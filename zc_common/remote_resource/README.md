@@ -59,6 +59,10 @@ class ShippingCompany(models.Model):
     pickup_address = RemoteForeignKey('Address', db_column='pickup_address_id')
 ```
 
+## RelationshipView (views)
+
+To handle the relationship view for each resource we have created a view to facilitate the extra handling needed to work properly with remote relationships. This view is a complete drop in for the JSON API package's RelationshipView, so all you need to do is import it from `zc_common.remote_resource.views` to have a relationship view that handles remote resources and there should be no extra work required aside from setting the queryset.
+
 ## RemoteResourceField (serializer field)
 
 The RemoteResourceField is necessary when writing model serializers to specify that it should be treated like a relationship resource that is not local to the django project. To get everything working properly there's a bit of configuration required:
@@ -85,7 +89,7 @@ In Views:
 
 ```python
 from rest_framework import viewsets
-from rest_framework_json_api.views import RelationshipView
+from zc_common.remote_resource.views import RelationshipView
 
 from companies.models import ShippingCompany
 from companies.serializers import ShippingCompanyModelSerializer
@@ -133,9 +137,10 @@ To use this paginator instead of the default one, modify the `DEFAULT_PAGINATION
 
 ## ToDo/Known Issues
 
-* Following the relationship `self` link from within the service (e.g. `/companies/1/relationships/billing_addres`) currently throws an error.
+* Following the relationship `self` link from within the service (e.g. `/companies/1/relationships/billing_addres`) does not include a top-level links object.
 * Investigate how JSON API package deals with polymorphic models and whether the open PR will address the issue.
  * A GET request to a base model collection will correctly identify the `type` of each object, however only common fields covered by the default serializer will be included in the output.
+ * For now, we won't support polymorphic collections, but normal actions with specific polymorphic models should not cause any problems.
 * Investigate that JSON API package is handling POST and PATCH requests for related resources according to the spec (currently only tested for non-Remote related items until the relationship link issue above is resolved).
  * PATCH request updating to-many relationships will correctly replace the the entire relationship with the content of the array of resource identifier objects passed in the request (incorrectly returns a 200 response with the representation of the updated relationship).
  * PATCH requests made to the relationship link (such as `/articles/1/relationships/comments`) updating to-one and to-many relationships with an empty data object to clear the relationship (e.g. `{ data: None }` and `{ data: [] }`) are incorrectly rejected by the server with a 400 error for not passing primary data. This is correctly handled for PATCH actions made to the detail object directly (for example, `/comments/1`).
