@@ -18,7 +18,12 @@ class ResponseTestCase(APITestCase):
 
         self.assertTrue(all(key in response_content for key in self.SUCCESS_HIGH_LEVEL_KEYS))
 
-        for data in response_content['data']:
+        if isinstance(response_content['data'], list):
+            response_content_data = response_content['data']
+        else:
+            response_content_data =  [response_content['data']]
+
+        for data in response_content_data:
             self.assertTrue(all(key in data for key in self.SUCCESS_DATA_KEYS))
 
             if relationship_keys:
