@@ -48,7 +48,7 @@ class ResponseTestCase(APITestCase):
                 self.assertTrue(all(key in relationships for key in relationship_keys))
 
                 for relationship_name, relationship in relationships.iteritems():
-                    self.assertTrue(all(key in relationship for key in ['data', 'meta']))
+                    self.assertTrue(all(key in relationship for key in ['data', 'links']))
 
                     for relationship_data in self.convert_to_list(relationship['data']):
                         self.assertTrue(all(key in relationship_data for key in ['type', 'id']))
