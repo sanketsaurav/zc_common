@@ -1,4 +1,5 @@
 import json
+from inflection import camelize
 
 from django.test import TestCase
 from rest_framework.test import APITestCase
@@ -30,7 +31,7 @@ class ResponseTestCase(APITestCase):
         * Resource object MUST contain AT LEAST ONE of ['attributes', 'relationships']
         * Resource object MAY contain ['links', 'meta']
 
-        * Relatiionship object MUST contain AT LEAST ONE of ['links', 'data', 'meta']
+        * Relationship object MUST contain AT LEAST ONE of ['links', 'data', 'meta']
             - Relationship links object MUST contain AT LEAST ONE of ['self', 'related']
         """
         self.assertEqual(response.status_code, status)
@@ -45,7 +46,7 @@ class ResponseTestCase(APITestCase):
             if relationship_keys:
                 self.assertTrue('relationships' in data)
                 relationships = data['relationships']
-                self.assertTrue(all(key in relationships for key in relationship_keys))
+                self.assertTrue(all(camelize(key, False) in relationships for key in relationship_keys))
 
                 for relationship_name, relationship in relationships.iteritems():
                     self.assertTrue(all(key in relationship for key in ['data', 'links']))
