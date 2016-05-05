@@ -137,7 +137,7 @@ We have created a custom paginator to include the `self` link to GET responses t
 
 To use this paginator instead of the default one, modify the `DEFAULT_PAGINATION_CLASS` setting in your `settings.py` file to `'zc_common.remote_resource.pagination.PageNumberPagination',` (this is already the case if you copied the block at the top of this README into your settings file).
 
-## ToDo/Known Issues
+## TODO/Known Issues
 
 * Following the relationship `self` link from within the service (e.g. `/companies/1/relationships/billing_addres`) does not include a top-level links object.
 * Investigate how JSON API package deals with polymorphic models and whether the open PR will address the issue.
@@ -148,3 +148,4 @@ To use this paginator instead of the default one, modify the `DEFAULT_PAGINATION
  * PATCH requests made to the relationship link (such as `/articles/1/relationships/comments`) updating to-one and to-many relationships with an empty data object to clear the relationship (e.g. `{ data: None }` and `{ data: [] }`) are incorrectly rejected by the server with a 400 error for not passing primary data. This is correctly handled for PATCH actions made to the detail object directly (for example, `/comments/1`).
  * POST requests to to-many relationship links work correctly (add relationship items posted in addition to the items already in the relationship instead of replacing as is the case with PATCH); POST requests made to to-one relationship links correctly prohibit the action (PATCH requests are acceptable and work correctly aside from the clearing issue mentioned above).
  * DELETE requests to relationship links are handled correctly.
+* A PATCH request made to a remote resource relationship will incorrectly return a 200 as well as a stale version of the relationship (it will not reflect the PATCH data).
