@@ -1,16 +1,27 @@
+import os
+
 from setuptools import setup
 
+
+def get_packages(package):
+    """
+    Return root package and all sub-packages.
+    """
+    return [dirpath
+            for dirpath, dirnames, filenames in os.walk(package)
+            if os.path.exists(os.path.join(dirpath, '__init__.py'))]
+
 setup(name='zc_common',
-      version='0.0.2',
+      version='0.1.0',
       description="A collection of Python utils",
       long_description='',
       keywords='zerocater python util',
       author='ZeroCater',
       author_email='tech@zerocater.com',
       url='https://github.com/ZeroCater/zc_common',
-      download_url='https://github.com/ZeroCater/zc_common/tarball/0.0.2',
+      download_url='https://github.com/ZeroCater/zc_common/tarball/0.1.0',
       license='MIT',
-      packages=['zc_common'],
+      packages=get_packages('zc_common'),
       classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
