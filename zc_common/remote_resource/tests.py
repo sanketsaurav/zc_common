@@ -18,6 +18,21 @@ class ResponseTestCase(APITestCase):
             return [data]
 
     def success_response_structure_test(self, response, status, relationship_keys=None):
+        """
+        This can be extended in the future to cover stricter validation of the
+        response as follows:
+
+        * Top level response MUST contain AT LEAST ONE of ['data', 'meta']
+        * Top level response MUST contain ['links']  # Our requirement
+            - Top level links MUST contain ['self']; MAY contain ['related']
+
+        * Resource object MUST contain ['id', 'type']
+        * Resource object MUST contain AT LEAST ONE of ['attributes', 'relationships']
+        * Resource object MAY contain ['links', 'meta']
+
+        * Relatiionship object MUST contain AT LEAST ONE of ['links', 'data', 'meta']
+            - Relationship links object MUST contain AT LEAST ONE of ['self', 'related']
+        """
         self.assertEqual(response.status_code, status)
 
         response_content = self.load_json(response)
