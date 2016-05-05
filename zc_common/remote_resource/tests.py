@@ -11,6 +11,12 @@ class ResponseTestCase(APITestCase):
     FAILURE_HIGH_LEVEL_KEYS = ['errors']
     FAILURE_DATA_KEYS = ['status', 'source', 'detail']
 
+    def convert_to_list(self, data):
+        if isinstance(data, list):
+            return data
+        else:
+            return [data]
+
     def success_response_structure_test(self, response, status, relationship_keys=None):
         self.assertEqual(response.status_code, status)
 
@@ -18,12 +24,7 @@ class ResponseTestCase(APITestCase):
 
         self.assertTrue(all(key in response_content for key in self.SUCCESS_HIGH_LEVEL_KEYS))
 
-        if isinstance(response_content['data'], list):
-            response_content_data = response_content['data']
-        else:
-            response_content_data =  [response_content['data']]
-
-        for data in response_content_data:
+        for data in self.convert_to_list(response_content_data):
             self.assertTrue(all(key in data for key in self.SUCCESS_DATA_KEYS))
 
             if relationship_keys:
@@ -34,7 +35,7 @@ class ResponseTestCase(APITestCase):
                 for relationship_name, relationship in relationships.iteritems():
                     self.assertTrue(all(key in relationship for key in ['data', 'meta']))
 
-                    for relationship_data in relationship['data']:
+                    for relationship_data in self.convert_to_list(relationship['data']):
                         self.assertTrue(all(key in relationship_data for key in ['type', 'id']))
 
     def failure_response_structure_test(self, response, status):
