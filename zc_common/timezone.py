@@ -77,7 +77,7 @@ def activate(value):
         value = value.get_timezone()
     if isinstance(value, str):
         value = pytz.timezone(value)
-    assert (isinstance(value, python_datetime.tzinfo), 'Value passed was not tzinfo, it was: %s' % type(value))
+    assert isinstance(value, python_datetime.tzinfo), 'Value passed was not tzinfo, it was: %s' % type(value)
     from django.utils.timezone import activate as timezone_activate
     return timezone_activate(value)
 
@@ -110,7 +110,7 @@ def timezone_abbrv_mappings():
     By default, dateutil doesn't parse at least `EDT` correctly.
     Pass output of this function as `tzinfos` param to parse() if it isn't pickin up timezone correctly.
     """
-    from dateutil.tz import *
+    from dateutil.tz import gettz
     return {'EDT': gettz('America/New_York'),
             'EST': gettz('America/New_York'),
             'CDT': gettz('America/Chicago'),
@@ -177,7 +177,8 @@ def datetime(year, month, day, hour=0, minute=0, second=0, microsecond=0, tzinfo
         dt = make_aware(dt, tzinfo)
     dt = localtime(dt, tz=tzinfo)  # Have to set the correct offset
     # Setting the offset may have changed something else, like the hour, so replace
-    return dt.replace(year=year, month=month, day=day, hour=hour, minute=minute, second=second, microsecond=microsecond)
+    return dt.replace(
+        year=year, month=month, day=day, hour=hour, minute=minute, second=second, microsecond=microsecond)
 
 
 def datetime_min():
@@ -249,7 +250,8 @@ def monthly_iter(start, end):
     2014-10-19 00:00:00-07:00
 
     In [4]: timezone.now()
-    Out[4]: datetime.datetime(2014, 11, 18, 16, 36, 54, 994666, tzinfo=<DstTzInfo 'America/Los_Angeles' PST-1 day, 16:00:00 STD>)
+    Out[4]: datetime.datetime(
+        2014, 11, 18, 16, 36, 54, 994666, tzinfo=<DstTzInfo 'America/Los_Angeles' PST-1 day, 16:00:00 STD>)
     """
     from dateutil import rrule
 
