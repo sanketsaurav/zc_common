@@ -1,3 +1,4 @@
+import exceptions
 import json
 from inflection import camelize
 
@@ -12,15 +13,19 @@ class ResponseTestCase(APITestCase):
     FAILURE_HIGH_LEVEL_KEYS = ['errors']
     FAILURE_DATA_KEYS = ['status', 'source', 'detail']
 
-    INSTANCE_TOP_LEVEL_KEYS = ["type", "id", "attributes"]
+    INSTANCE_TOP_LEVEL_KEYS = ['type', 'id', 'attributes']
 
     def convert_to_list(self, data):
+        if isinstance(data, list):
+            return data
+
         if isinstance(data, dict):
             return [data]
-        elif isinstance(data, list):
-            return data
-        else:
+
+        try:
             return data.all()
+        except AttributeError:
+            return [data]
 
     def validate_instance_in_data(self, data, instance, attributes, relationship_keys=None):
         self.assertTrue(all(key in data for key in self.INSTANCE_TOP_LEVEL_KEYS))
@@ -45,7 +50,7 @@ class ResponseTestCase(APITestCase):
 
                 try:
                     instance_type = instance_object.type
-                except:
+                except AttributeError:
                     instance_type = instance_object.__class__.__name__
 
                 self.assertEqual(data_object["type"], instance_type)
