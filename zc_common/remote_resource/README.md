@@ -10,7 +10,10 @@ Specifically, this package contains helpers for extending the JSON API package's
 
 ## Using JSON API with Django Rest Framework
 
-zc_common does not contain any dependencies for the related resources at the package level, so make sure that you have `django`, `djangorestframework`, `djangorestframework-jsonapi` installed.
+In order to use this remote_resources package, you must install the dependencies:
+```bash
+pip install django, djangorestframework, djangorestframework-jsonapi
+```
 
 Follow the installation instructions for `zc_common` in the base README. You may need to add the following line to your Dockerfile:
 
