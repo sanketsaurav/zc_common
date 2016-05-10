@@ -12,14 +12,14 @@ def get_packages(package):
             if os.path.exists(os.path.join(dirpath, '__init__.py'))]
 
 setup(name='zc_common',
-      version='0.1.0',
+      version='0.1.1',
       description="A collection of Python utils",
       long_description='',
       keywords='zerocater python util',
       author='ZeroCater',
       author_email='tech@zerocater.com',
       url='https://github.com/ZeroCater/zc_common',
-      download_url='https://github.com/ZeroCater/zc_common/tarball/0.1.0',
+      download_url='https://github.com/ZeroCater/zc_common/tarball/0.1.1',
       license='MIT',
       packages=get_packages('zc_common'),
       classifiers=[
