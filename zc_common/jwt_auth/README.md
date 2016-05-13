@@ -1,5 +1,8 @@
 # Service Authorization
 
+This document serves to explain how microservices can handle authorization of
+incoming requests.
+
 ## JWTs
 
 Example:
