@@ -32,7 +32,15 @@ haven't already, along with `restframework_jwt`:
 pip install djangorestframework_jwt
 ```
 
-Next, import the `JWTAuthentication` class and include it.
+Next, you'll need to add the following lines to your `settings.py`:
+```python
+JWT_AUTH = {
+    'JWT_VERIFY': False,
+    'JWT_VERIFY_EXPIRATION': False
+}
+```
+
+Then, import the `JWTAuthentication` class and include it.
 ```python
 from zc_common.jwt_auth import JWTAuthentication
 
