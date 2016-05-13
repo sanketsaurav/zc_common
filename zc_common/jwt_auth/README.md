@@ -100,6 +100,26 @@ class OrderDetailView(generics.RetrieveAPIView):
   queryset = Order.objects.all()
 ```
 
+### Testing with Authentication
+
+To test an endpoint that requires auth, you can force authentication like so:
+
+```python
+from rest_framework.test import APITestCase
+
+
+class MyTestCase(ApiTestCase):
+  def force_authenticate(self):
+    from zc_common.jwt_auth.authentication import User
+    user = User(id=1, roles=['staff'])
+    self.client.force_authenticate(user=user)
+    
+  def test_auth_endpoint(self):
+    self.force_authenticate()
+    self.client.get('/my_endpoint')
+    # The view's `request.user` will be the above `User` instance
+```
+
 ## Authorization Explanations
 
 For implementing authorization outside of Django Rest Framework, follow these
