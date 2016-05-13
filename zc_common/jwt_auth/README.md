@@ -48,22 +48,18 @@ view. But here are some example permissions to show you how:
 ```python
 from django.contrib.auth.models import AnonymousUser
 from rest_framework.permissions import BasePermission
-
-
-class IsAuthenticated(BasePermission):
-  '''
-  A permission to verify the user is authenticated
-  '''
-  def has_permission(self, request, view):
-    return type(request.user) != AnonymousUser
     
     
 class IsStaff(BasePermission):
   '''
   A permission to verify the user is staff
   '''
+  
   def has_permission(self, request, view):
-    return 'staff' in request.user['roles']
+    is_auth = request.user.is_authenticated()
+    if not is_auth:
+      return False
+    return 'staff' in request.user.roles
     
     
 class IsOrderOwner(BasePermission):
@@ -71,8 +67,11 @@ class IsOrderOwner(BasePermission):
   A permission to verify the user is the author of the order.
   '''
   def has_object_permission(self, request, view, obj):
+    is_auth = request.user.is_authenticated()
+    if not is_auth:
+      return False
     # In this case, `obj` is the Order instance
-    return request.user['id'] == obj.owner.id
+    return request.user.id == obj.owner.id
 ```
 
 Here's some example views to show how the permissions could be used:
@@ -97,7 +96,7 @@ class OrderDetailView(generics.RetrieveAPIView):
   
   # JWTAuthentication decodes the JWT and assigns the payload to `request.user`
   authentication_classes = (JWTAuthentication,)
-  permission_classes = (IsAuthenticated, IsOrderOwner)
+  permission_classes = (IsOrderOwner,)
   queryset = Order.objects.all()
 ```
 
