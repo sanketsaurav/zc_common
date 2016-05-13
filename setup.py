@@ -12,7 +12,7 @@ def get_packages(package):
             if os.path.exists(os.path.join(dirpath, '__init__.py'))]
 
 setup(name='zc_common',
-      version='0.1.1',
+      version='0.1.2',
       description="A collection of Python utils",
       long_description='',
       keywords='zerocater python util',

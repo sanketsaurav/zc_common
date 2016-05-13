@@ -1,0 +1,123 @@
+# Service Authorization
+
+This document serves to explain how microservices can handle authorization of
+incoming requests.
+
+## JWTs
+
+Example:
+```javascript
+{
+  "id": "356",
+  "roles": ["staff"]
+}
+```
+
+The mechanism for authorization is the JWT that will be provided with each
+authenticated request. This JWT contains details about the user, which services
+will need for the purposes of authorization.
+
+## Django Rest Framework
+
+### Authentication class
+
+A prerequisite to any permissions is the `JWTAuthentication` class. You'll
+need to include this class in your view's `authentication_classes` in order for
+any of the below permissions to function properly. The `JWTAuthentication` class
+assists by handling the decoding of incoming JWTs.
+
+First, install [`zc_common`](https://github.com/ZeroCater/zc_common) if you
+haven't already, along with `restframework_jwt`:
+```bash
+pip install djangorestframework_jwt
+```
+
+Next, import the `JWTAuthentication` class and include it.
+```python
+from zc_common.jwt_auth import JWTAuthentication
+
+class MyView(ApiView):
+  authentication_classes = (JWTAuthentication,)
+```
+
+### Permissions
+
+You'll usually need to write your own permissions, based on the needs of your
+view. But here are some example permissions to show you how:
+
+```python
+from django.contrib.auth.models import AnonymousUser
+from rest_framework.permissions import BasePermission
+
+
+class IsAuthenticated(BasePermission):
+  '''
+  A permission to verify the user is authenticated
+  '''
+  def has_permission(self, request, view):
+    return type(request.user) != AnonymousUser
+    
+    
+class IsStaff(BasePermission):
+  '''
+  A permission to verify the user is staff
+  '''
+  def has_permission(self, request, view):
+    return 'staff' in request.user['roles']
+    
+    
+class IsOrderOwner(BasePermission):
+  '''
+  A permission to verify the user is the author of the order.
+  '''
+  def has_object_permission(self, request, view, obj):
+    # In this case, `obj` is the Order instance
+    return request.user['id'] == obj.owner.id
+```
+
+Here's some example views to show how the permissions could be used:
+
+```python
+from rest_framework import generics
+from zc_common.jwt_auth import JWTAuthentication
+
+class MealDetailView(generics.RetrieveAPIView):
+  '''
+  A simple public view for viewing the details of a meal.
+  '''
+  
+  queryset = Meal.objects.all()
+
+
+class OrderDetailView(generics.RetrieveAPIView):
+  '''
+  A simple detail view that requires the user to be authenticated, and the
+  owner of the specific order.
+  '''
+  
+  # JWTAuthentication decodes the JWT and assigns the payload to `request.user`
+  authentication_classes = (JWTAuthentication,)
+  permission_classes = (IsAuthenticated, IsOrderOwner)
+  queryset = Order.objects.all()
+```
+
+## Authorization Explanations
+
+For implementing authorization outside of Django Rest Framework, follow these
+rules.
+
+### Public
+
+If a service wishes to make a route public, no work is required.
+
+### Authentication-required
+
+For routes which require the user to simply be logged in, services simply need
+to check for the presence of the JWT. The gateway validates any provided JWTs,
+and rejects those that are invalid, so if a service gets a request with a JWT,
+they can trust that it is valid, and that user is authenticated.
+
+### Staff Only
+
+Routes that are only accessible to staff will need to check the `roles`
+key of the JWT. Staff can be distinguished with the `staff` role.
