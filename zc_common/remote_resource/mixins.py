@@ -17,7 +17,7 @@ class MultipleIDMixin(object):
             ids = dict(self.request.query_params).getlist('ids[]')
             if ids:
                 try:
-                    self.queryset = self.queryset.filter(id__in=ids)
+                    self.queryset = self.queryset.filter(pk__in=ids)
                 except (ValueError, IntegrityError):
                     raise Http404
         return self.queryset

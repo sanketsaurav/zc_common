@@ -41,11 +41,11 @@ class RemoteResourceField(ResourceRelatedField):
         # RemoteResource object or RelatedManager in the case of a to-many relationship.
         related_obj = getattr(obj, self.source)
         if isinstance(related_obj, BaseManager):
-            list_of_ids = related_obj.values_list('id', flat=True)
+            list_of_ids = related_obj.values_list('pk', flat=True)
             query_parameters = unquote(urlencode({'ids[]': list_of_ids}, doseq=True))
             related_path = self.related_resource_path.format(pk=query_parameters)
         else:
-            related_path = self.related_resource_path.format(pk=related_obj.id)
+            related_path = self.related_resource_path.format(pk=related_obj.pk)
         related_link = request.build_absolute_uri(related_path)
 
         if self_link:
