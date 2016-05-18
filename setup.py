@@ -20,7 +20,7 @@ setup(
     author='ZeroCater',
     author_email='tech@zerocater.com',
     url='https://github.com/ZeroCater/zc_common',
-    download_url='https://github.com/ZeroCater/zc_common/tarball/0.1.1',
+    download_url='https://github.com/ZeroCater/zc_common/tarball/0.1.3',
     license='MIT',
     packages=get_packages('zc_common'),
     classifiers=[
