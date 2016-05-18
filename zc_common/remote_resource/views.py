@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from django.db.models import Model
 from django.db.models.query import QuerySet
 from django.db.models.manager import Manager
@@ -25,11 +26,9 @@ class ModelViewSet(viewsets.ModelViewSet):
             ids = self.request.query_params.getlist('ids[]')
             if ids:
                 try:
-                    [int(item) for item in ids]
-                except ValueError:
+                    queryset = self.filter_queryset(self.get_queryset().filter(pk__in=ids))
+                except (ValueError, IntegrityError):
                     raise Http404
-
-                queryset = self.filter_queryset(self.get_queryset().filter(id__in=ids))
 
                 page = self.paginate_queryset(queryset)
                 if page is not None:

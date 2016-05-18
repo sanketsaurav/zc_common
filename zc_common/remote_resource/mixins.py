@@ -1,6 +1,7 @@
 """
 Class Mixins.
 """
+from django.db import IntegrityError
 from django.http import Http404
 
 
@@ -16,9 +17,7 @@ class MultipleIDMixin(object):
             ids = dict(self.request.query_params).getlist('ids[]')
             if ids:
                 try:
-                    [int(item) for item in ids]
-                except ValueError:
+                    self.queryset = self.queryset.filter(id__in=ids)
+                except (ValueError, IntegrityError):
                     raise Http404
-
-                self.queryset = self.queryset.filter(id__in=ids)
         return self.queryset
