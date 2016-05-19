@@ -21,22 +21,25 @@ class ModelViewSet(viewsets.ModelViewSet):
     Inheriting from this class will, with no extra action required, properly
     handle requests made to /collection/ as well as /collection?ids[]=1&ids[]=3.
     """
+    def get_ids_query_params(self):
+        if hasattr(self.request, 'query_params'):
+            return self.request.query_params.getlist('ids[]')
+
     def list(self, request, *args, **kwargs):
-        if hasattr(request, 'query_params'):
-            ids = self.request.query_params.getlist('ids[]')
-            if ids:
-                try:
-                    queryset = self.filter_queryset(self.get_queryset().filter(pk__in=ids))
-                except (ValueError, IntegrityError):
-                    raise Http404
+        ids = self.get_ids_query_params()
+        if ids:
+            try:
+                queryset = self.filter_queryset(self.get_queryset().filter(pk__in=ids))
+            except (ValueError, IntegrityError):
+                raise Http404
 
-                page = self.paginate_queryset(queryset)
-                if page is not None:
-                    serializer = self.get_serializer(page, many=True)
-                    return self.get_paginated_response(serializer.data)
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
 
-                serializer = self.get_serializer(queryset, many=True)
-                return Response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
         return super(ModelViewSet, self).list(request, *args, **kwargs)
 
 
