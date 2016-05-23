@@ -1,5 +1,5 @@
 import json
-from inflection import camelize
+from inflection import camelize, underscore, pluralize
 
 from django.test import TestCase
 from rest_framework.test import APITestCase
@@ -64,6 +64,11 @@ class ResponseTestCase(APITestCase):
 
     def validate_instance_list_in_response(self, response, instances, attributes, relationship_keys=None):
         instance_data = self.load_json(response)['data']
+        self.assertEqual(len(instance_data), len(instances))
+
+        instance_data.sort(key=lambda x: x['id'])
+        list(instances).sort(key=lambda x: x.id)
+
         for data, instance in zip(instance_data, instances):
             self.validate_instance_in_data(
                 data, instance, attributes, relationship_keys)
@@ -107,6 +112,20 @@ class ResponseTestCase(APITestCase):
                     for relationship_data in self.convert_to_list(relationship['data']):
                         self.assertTrue(
                             all(key in relationship_data for key in ['type', 'id']))
+
+                    links = relationship['links']
+
+                    resource_pk = self.resource.pk if hasattr(self, 'resource') else '[0-9A-Za-z]*'
+
+                    self.assertRegexpMatches(links['self'], r'^https?://.*/{}/{}/relationships/{}'.format(
+                        self.resource_name, resource_pk, underscore(relationship_name)))
+
+                    if hasattr(self, 'remote_relationship_keys') and relationship_name in self.remote_relationship_keys:
+                        self.assertRegexpMatches(links['related'], r'^https?://.*/{}/\w'.format(
+                            pluralize(underscore(relationship_name))))
+                    else:
+                        self.assertRegexpMatches(links['related'], r'^https?://.*/{}/{}/{}'.format(
+                            self.resource_name, resource_pk, underscore(relationship_name)))
 
     def failure_response_structure_test(self, response, status):
         self.assertEqual(response.status_code, status)
