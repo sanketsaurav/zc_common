@@ -16,18 +16,24 @@ class ModelViewSet(viewsets.ModelViewSet):
     This class overwrites the ModelViewSet's list method, which handles
     requests made to the collection's base endpoint (/collection/), in
     order to fulfill requests made for multiple resources by chaning together
-    query parameters in the format of /collection?ids[]=1&ids[]=3&ids[]=5.
+    query parameters in the format of /collection?ids=1,3,5.
 
     Inheriting from this class will, with no extra action required, properly
-    handle requests made to /collection/ as well as /collection?ids[]=1&ids[]=3.
+    handle requests made to /collection/ as well as /collection?ids=1,3. A
+    request made to /collection?ids= will return an empty data object.
     """
+    def has_ids_query_params(self):
+        return hasattr(self.request, 'query_params') and 'ids' in self.request.query_params
+
     def get_ids_query_params(self):
         if hasattr(self.request, 'query_params'):
-            return self.request.query_params.getlist('ids[]')
+            query_param_ids = self.request.query_params.get('ids')
+            return [] if not query_param_ids else query_param_ids.split(',')
 
     def list(self, request, *args, **kwargs):
-        ids = self.get_ids_query_params()
-        if ids:
+        if self.has_ids_query_params():
+            ids = self.get_ids_query_params()
+
             try:
                 queryset = self.filter_queryset(self.get_queryset().filter(pk__in=ids))
             except (ValueError, IntegrityError):
