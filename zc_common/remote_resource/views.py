@@ -2,6 +2,7 @@ from django.db import IntegrityError
 from django.db.models import Model
 from django.db.models.query import QuerySet
 from django.db.models.manager import Manager
+from rest_framework.exceptions import MethodNotAllowed
 from django.http import Http404
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -51,6 +52,18 @@ class ModelViewSet(viewsets.ModelViewSet):
 
 class RelationshipView(RelationshipView):
     serializer_class = ResourceIdentifierObjectSerializer
+
+    def patch(self, request, *args, **kwargs):
+        """
+        Restricting PATCH requests made to the relationship view temporarily to
+        prevent the possibility of data corruption when PATCH requests are made
+        to to-many related resources. This override will not be necessary
+        once a fix is made upstream.
+
+        See:
+        https://github.com/django-json-api/django-rest-framework-json-api/blob/7ad660b2534bed3b30c64a55a0e79f59b3db1a70/rest_framework_json_api/views.py#L89
+        """
+        raise MethodNotAllowed('PATCH')
 
     def _instantiate_serializer(self, instance):
         if isinstance(instance, RemoteResource):
