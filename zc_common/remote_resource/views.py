@@ -61,7 +61,7 @@ class RelationshipView(RelationshipView):
         once a fix is made upstream.
 
         See:
-        https://github.com/django-json-api/django-rest-framework-json-api/blob/7ad660b2534bed3b30c64a55a0e79f59b3db1a70/rest_framework_json_api/views.py#L89
+        https://github.com/django-json-api/django-rest-framework-json-api/issues/242
         """
         raise MethodNotAllowed('PATCH')
 
