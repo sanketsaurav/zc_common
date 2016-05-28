@@ -13,8 +13,8 @@ class MultipleIDMixin(object):
         """
         Override :meth:``get_queryset``
         """
-        if hasattr(self.request, 'query_params') and 'ids' in self.request.query_params:
-            query_param_ids = self.request.query_params.get('ids')
+        if hasattr(self.request, 'query_params') and 'filter[id]' in self.request.query_params:
+            query_param_ids = self.request.query_params.get('filter[id]')
             ids = [] if not query_param_ids else query_param_ids.split(',')
 
             try:
