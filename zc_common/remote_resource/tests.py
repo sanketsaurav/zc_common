@@ -139,9 +139,8 @@ class ResponseTestCase(APITestCase):
             'workAddress': 'address'
         }
         """
-        if hasattr(self, 'relationship_name_mapping'):
-            if self.relationship_name_mapping.get(relationship_name):
-                return self.relationship_name_mapping[relationship_name]
+        if hasattr(self, 'relationship_name_mapping') and self.relationship_name_mapping.get(relationship_name):
+            return self.relationship_name_mapping[relationship_name]
         return relationship_name
 
     def failure_response_structure_test(self, response, status):
