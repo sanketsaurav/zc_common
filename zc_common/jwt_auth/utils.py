@@ -3,8 +3,9 @@ from rest_framework_jwt.settings import api_settings
 
 
 def jwt_payload_handler(user):
-    '''Constructs a payload for a user JWT. This is a slimmed down version of 
-    https://github.com/GetBlimp/django-rest-framework-jwt/blob/master/rest_framework_jwt/utils.py#L11
+    '''Constructs a payload for a user JWT.
+    This is a slimmed down version of the handler in
+    https://github.com/GetBlimp/django-rest-framework-jwt/
     
     :param User: an object with `pk` and `get_roles()`
     :return: A dictionary that can be passed into `jwt_encode_handler`
