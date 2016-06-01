@@ -19,6 +19,13 @@ class User(object):
     def is_authenticated(self):
         return True
 
+    def get_roles(self):
+        '''
+            Note: For testing purposes only
+                  https://github.com/ZeroCater/mp-users/blob/master/users/models.py
+        '''
+        return self.roles
+
 
 class JWTAuthentication(BaseAuthentication):
     """
