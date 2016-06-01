@@ -21,7 +21,7 @@ class User(object):
 
     def get_roles(self):
         '''
-            Note: For testing purposes only
+            Note: For testing purposes only. Emulates `get_roles` in
                   https://github.com/ZeroCater/mp-users/blob/master/users/models.py
         '''
         return self.roles
