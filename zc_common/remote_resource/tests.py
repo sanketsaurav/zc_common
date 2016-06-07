@@ -32,8 +32,13 @@ class ResponseTestCase(APITestCase):
 
         instance_attributes = data['attributes']
         for key in attributes:
+            instance_attribute = getattr(instance, key)
+
+            if hasattr(instance_attribute, '__call__'):
+                instance_attribute = instance_attribute()
+
             self.assertEqual(
-                instance_attributes[camelize(key, False)], getattr(instance, key))
+                instance_attributes[camelize(key, False)], instance_attribute)
 
         if not relationship_keys:
             return True
