@@ -4,6 +4,9 @@ from inflection import camelize, underscore, pluralize
 from django.test import TestCase
 from rest_framework.test import APITestCase
 
+from zc_common.jwt_auth.authentication import User
+from zc_common.jwt_auth.utils import jwt_payload_handler, jwt_encode_handler
+
 
 class ResponseTestCase(APITestCase):
     SUCCESS_HIGH_LEVEL_KEYS = ['data']
@@ -13,6 +16,8 @@ class ResponseTestCase(APITestCase):
     FAILURE_DATA_KEYS = ['status', 'source', 'detail']
 
     INSTANCE_TOP_LEVEL_KEYS = ['type', 'id', 'attributes']
+
+    USER_ROLE = USER
 
     def convert_to_list(self, data):
         if isinstance(data, list):
@@ -162,3 +167,39 @@ class ResponseTestCase(APITestCase):
 
     def load_json(self, response):
         return json.loads(response.content.decode())
+
+    def generate_token(self, user):
+        payload = jwt_payload_handler(user)
+        token = jwt_encode_handler(payload)
+
+        return "JWT {}".format(token)
+
+    def generate_user(self, roles, user_id=None):
+        if not user_id:
+            user_id = '1'
+        return User(pk=user_id, roles=roles)
+
+    def client_request_auth(self, method, url, *args, **kwargs):
+        roles = kwargs.pop('user_role', None)
+        user_id = kwargs.pop('user_id', None)
+
+        if not roles:
+            return getattr(self.client, method)(url, *args, **kwargs)
+
+        user = self.generate_user(roles, user_id)
+
+        kwargs['HTTP_AUTHORIZATION'] = self.generate_token(user)
+
+        return getattr(self.client, method)(url, *args, **kwargs)
+
+    def client_get_auth(self, url, *args, **kwargs):
+        return self.client_request_auth('get', url, *args, **kwargs)
+
+    def client_post_auth(self, url, *args, **kwargs):
+        return self.client_request_auth('post', url, *args, **kwargs)
+
+    def client_patch_auth(self, url, *args, **kwargs):
+        return self.client_request_auth('patch', url, *args, **kwargs)
+
+    def client_delete_auth(self, url, *args, **kwargs):
+        return self.client_request_auth('delete', url, *args, **kwargs)
