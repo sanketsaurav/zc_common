@@ -3,14 +3,7 @@ import json
 from inflection import camelize
 from rest_framework import status
 from rest_framework.reverse import reverse
-
-STAFF_PERMISSION_NAME = 'staff'
-USER_PERMISSION_NAME = 'user'
-SERVICE_PERMISSION_NAME = 'service'
-
-USER = [USER_PERMISSION_NAME]
-STAFF = [USER_PERMISSION_NAME, STAFF_PERMISSION_NAME]
-SERVICE = [USER_PERMISSION_NAME, SERVICE_PERMISSION_NAME]
+from .tests import USER, STAFF, SERVICE
 
 
 class ResourceCreateTestCase(object):

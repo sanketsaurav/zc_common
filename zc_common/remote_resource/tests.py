@@ -7,6 +7,14 @@ from rest_framework.test import APITestCase
 from zc_common.jwt_auth.authentication import User
 from zc_common.jwt_auth.utils import jwt_payload_handler, jwt_encode_handler
 
+STAFF_PERMISSION_NAME = 'staff'
+USER_PERMISSION_NAME = 'user'
+SERVICE_PERMISSION_NAME = 'service'
+
+USER = [USER_PERMISSION_NAME]
+STAFF = [USER_PERMISSION_NAME, STAFF_PERMISSION_NAME]
+SERVICE = [USER_PERMISSION_NAME, SERVICE_PERMISSION_NAME]
+
 
 class ResponseTestCase(APITestCase):
     SUCCESS_HIGH_LEVEL_KEYS = ['data']
