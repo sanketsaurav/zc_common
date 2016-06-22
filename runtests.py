@@ -18,6 +18,3 @@ pytest.main()
 
 # Delete test_db
 os.remove(os.curdir.join([test_db]))
-
-
-

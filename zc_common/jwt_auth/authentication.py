@@ -72,6 +72,8 @@ class JWTAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed(msg)
         except jwt.InvalidTokenError:  # pragma: no cover
             raise exceptions.AuthenticationFailed()
+        except Exception as ex:
+            raise exceptions.AuthenticationFailed(ex.message)
 
         user = User(**payload)
 
