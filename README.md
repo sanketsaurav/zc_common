@@ -10,3 +10,19 @@ from zc_common import timezone
 
 timezone.now()
 ```
+
+#### Running tests
+
+You can now run your tests to make sure zc_common code behaves as 
+expected. To get started, follow these instructions:
+```shell
+
+# Create a new python virtualenv and install dependecies
+mkvirtualenv zc_common
+workon zc_common
+pip install -r requirements
+
+# Run the tests
+python runtests.py
+
+```

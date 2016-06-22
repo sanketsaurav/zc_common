@@ -1,18 +1,22 @@
 import requests
 import json
-from uritemplate import expand
-from django.conf import settings
+from uritemplate import expand, variables
 from zc_common.jwt_auth.utils import service_jwt_payload_handler, jwt_encode_handler
-from zc_common.settings import api_settings as zc_common_settings
+from zc_common.settings import zc_settings
 
 
-def get_route_from_fk(resource_type, pk=None):
-    """Gets a fully qualified URI for a given resource_type, pk"""
-    routes = requests.get(zc_common_settings.GATEWAY_ROOT_PATH).json()
+def get_route_from_fk(resource_type, url_param_values):
+    """Gets a fully qualified URI for a given resource_type and url_param_values.
+    url_param_values should be a dict instance with keys being url parameters.
+    """
+    routes = requests.get(zc_settings.GATEWAY_ROOT_PATH).json()
 
     for route in routes.iterkeys():
         if 'resource_type' in routes[route] and routes[route]['resource_type'] == resource_type:
-            expanded = expand(route, {'id': pk})
+            if variables(route) and not url_param_values:
+                raise Exception('No parameters were supplied. Required params: {0}'.format(variables(route)))
+
+            expanded = expand(route, url_param_values)
             return '{0}{1}'.format(routes[route]['domain'], expanded)
 
     raise Exception('No route for resource_type: "{0}"'.format(resource_type))
@@ -27,9 +31,9 @@ def make_service_request(service_name, endpoint):
     return json.loads(requests.get(endpoint, headers=headers).json())
 
 
-def get_remote_resource(resource_type, pk):
-    url = get_route_from_fk(resource_type, pk)
-    response_data = make_service_request(url)
+def get_remote_resource(service_name, resource_type, url_param_values):
+    url = get_route_from_fk(resource_type, url_param_values)
+    response_data = make_service_request(service_name, url)
     return RemoteResourceWrapper(response_data)
 
 

@@ -7,4 +7,4 @@ DEFAULTS = {
         settings, 'GATEWAY_ROOT_PATH', os.environ.get('GATEWAY_ROOT_PATH', 'https://mp-gateway.herokuapp.com/'))
 }
 
-api_settings = APISettings(None, DEFAULTS, None)
+zc_settings = APISettings(None, DEFAULTS, None)
