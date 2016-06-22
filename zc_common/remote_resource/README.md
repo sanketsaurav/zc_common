@@ -12,7 +12,7 @@ Specifically, this package contains helpers for extending the JSON API package's
 
 In order to use this remote_resources package, you must install the dependencies:
 ```bash
-pip install django, djangorestframework, djangorestframework-jsonapi
+pip install django, djangorestframework, djangorestframework-jsonapi, django-filter
 ```
 
 Follow the installation instructions for `zc_common` in the base README. You may need to add the following line to your Dockerfile:
@@ -34,6 +34,9 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework_json_api.renderers.JSONRenderer',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'zc_common.remote_resource.filters.JSONAPIFilterBackend',
     ),
     'DEFAULT_METADATA_CLASS': 'rest_framework_json_api.metadata.JSONAPIMetadata',
 }
