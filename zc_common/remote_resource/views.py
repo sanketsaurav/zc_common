@@ -12,13 +12,14 @@ from zc_common.remote_resource.serializers import ResourceIdentifierObjectSerial
 class ModelViewSet(viewsets.ModelViewSet):
     """
     This class overwrites the ModelViewSet's list method, which handles
-    requests made to the collection's base endpoint (/collection/), in
-    order to fulfill requests made for multiple resources by chaning together
-    query parameters in the format of /collection?filter[id]=1,3,5.
+    requests made to the collection's base endpoint (/collection), in
+    order to provide support for filtering via the filter[] query parameter.
 
-    Inheriting from this class will, with no extra action required, properly
-    handle requests made to /collection/ as well as /collection?filter[id]=1,3.
-    A request made to /collection?filter[id]= will return an empty data object.
+    Inheriting from this class, along with adding the filter backend, will properly
+    handle requests made to /collection as well as /collection?filter[name]=test.
+    It's also possible to filter by a collection of primary keys, for example:
+    /collection?filter[id__in]=1,2,3
+    Requests to filter on keys that do not exist will return an empty set.
     """
 
     @property
