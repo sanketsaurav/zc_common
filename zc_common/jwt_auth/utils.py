@@ -19,6 +19,23 @@ def jwt_payload_handler(user):
     return payload
 
 
+def service_jwt_payload_handler(service_name):
+    """Constructs a payload for a service JWT.
+
+    Args:
+        service_name: a string corresponding to the name of the service where this JWT will be sent
+
+    Returns:
+        a dictionary that can be passed into `jwt_encode_handler`
+    """
+    payload = {
+        'serviceName': service_name,
+        'roles': ['service']
+    }
+
+    return payload
+
+
 def jwt_encode_handler(payload):
     '''
     Encodes a payload into a valid JWT.
