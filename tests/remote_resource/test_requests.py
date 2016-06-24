@@ -6,6 +6,43 @@ from zc_common.remote_resource.request import \
 
 
 class WrappersTestCase(TestCase):
+
+    def test_remote_resource_wrapper(self):
+        data = {
+            "data": {
+                "type": "articles",
+                "id": "1",
+                "attributes": {
+                    "title": "Omakase"
+                }
+            }
+        }
+
+        resource = RemoteResourceWrapper(data['data'])
+
+        self.assertEqual(resource.title, "Omakase")
+        self.assertEqual(resource.type, "articles")
+        self.assertEqual(resource.id, "1")
+
+    def test_remote_resource_list_wrapper(self):
+        data = {
+            "data": [
+                {
+                    "type": "articles",
+                    "id": "1",
+                    "attributes": {
+                        "title": "Omakase"
+                    }
+                }
+            ]
+        }
+
+        resource = RemoteResourceListWrapper(data['data'])
+
+        self.assertEqual(resource[0].title, "Omakase")
+        self.assertEqual(resource[0].type, "articles")
+        self.assertEqual(resource[0].id, "1")
+
     def test_remote_resource_wrapper_one_relationship(self):
         data = {
             "data": {
@@ -28,7 +65,6 @@ class WrappersTestCase(TestCase):
 
         resource = RemoteResourceWrapper(data['data'])
 
-        self.assertEqual(resource.title, "Omakase")
         self.assertEqual(resource.author.type, "People")
         self.assertEqual(resource.author.id, "9")
 
@@ -56,7 +92,6 @@ class WrappersTestCase(TestCase):
 
         resource = RemoteResourceWrapper(data['data'])
 
-        self.assertEqual(resource.title, "Omakase")
         self.assertEqual(resource.authors[0].type, "People")
         self.assertEqual(resource.authors[0].id, "9")
 
@@ -84,9 +119,6 @@ class WrappersTestCase(TestCase):
 
         resources = RemoteResourceListWrapper(data['data'])
 
-        self.assertEqual(resources[0].type, 'articles')
-        self.assertEqual(resources[0].id, '1')
-        self.assertEqual(resources[0].title, 'Omakase')
         self.assertEqual(resources[0].author.type, 'People')
         self.assertEqual(resources[0].author.id, '9')
 
@@ -116,9 +148,6 @@ class WrappersTestCase(TestCase):
 
         resources = RemoteResourceListWrapper(data['data'])
 
-        self.assertEqual(resources[0].type, 'articles')
-        self.assertEqual(resources[0].id, '1')
-        self.assertEqual(resources[0].title, 'Omakase')
         self.assertEqual(resources[0].authors[0].type, 'People')
         self.assertEqual(resources[0].authors[0].id, '9')
 
@@ -130,9 +159,21 @@ class RouteRetrievalTestCase(TestCase):
     def setUp(self):
         self.gateway_root_path = 'http://mp-gateway.zerocater.com'
         self.mappings = {
-            '/users/{id}': {
+            '/users': {
                 'domain': 'https://mp-users.zerocater.com',
                 'resource_type': 'User'
+            },
+            '/users{/id}': {
+                'domain': 'https://mp-users.zerocater.com',
+                'resource_type': 'User'
+            },
+            '/vendors': {
+                'domain': 'https://mp-vendors.zerocater.com',
+                'resource_type': 'Vendor'
+            },
+            '/vendors{/id}': {
+                'domain': 'https://mp-vendors.zerocater.com',
+                'resource_type': 'Vendor'
             }
         }
         self.get_response = mock.Mock()
@@ -147,7 +188,16 @@ class RouteRetrievalTestCase(TestCase):
         resource_type = 'Movie'
         self.assertRaises(Exception, get_route_from_fk, resource_type)
 
-    def test_correct_resource_type(self, mock_zc_settings, mock_requests):
+    def test_correct_resource_type_without_parameters(self, mock_zc_settings, mock_requests):
+        self.bind_mock_objects(mock_zc_settings, mock_requests)
+        expected_url = 'https://mp-users.zerocater.com/users'
+
+        result_url = get_route_from_fk('User')
+
+        mock_requests.get.assert_called_once_with(self.gateway_root_path)
+        self.assertEqual(expected_url, result_url)
+
+    def test_correct_resource_type_with_path_parameters(self, mock_zc_settings, mock_requests):
         self.bind_mock_objects(mock_zc_settings, mock_requests)
         expected_url = 'https://mp-users.zerocater.com/users/1'
 
@@ -156,9 +206,38 @@ class RouteRetrievalTestCase(TestCase):
         mock_requests.get.assert_called_once_with(self.gateway_root_path)
         self.assertEqual(expected_url, result_url)
 
-    def test_missing_required_parameters(self, mock_zc_settings, mock_requests):
-        resource_type = 'User'
-        self.assertRaises(Exception, get_route_from_fk, resource_type)
+    def test_correct_resource_type_with_one_query_parameter(self, mock_zc_settings, mock_requests):
+        self.bind_mock_objects(mock_zc_settings, mock_requests)
+        expected_url = 'https://mp-vendors.zerocater.com/vendors?filter[id__in]=[1,2,3]'
+
+        result_url = get_route_from_fk('Vendor', query_params={'filter[id__in]': '[1,2,3]'})
+
+        mock_requests.get.assert_called_once_with(self.gateway_root_path)
+        self.assertEqual(expected_url, result_url)
+
+    def test_correct_resource_type_with_more_query_parameters(self, mock_zc_settings, mock_requests):
+        self.bind_mock_objects(mock_zc_settings, mock_requests)
+        expected_url_1 = 'https://mp-vendors.zerocater.com/vendors?filter[id__in]=[1,2,3]&name=testing'
+        expected_url_2 = 'https://mp-vendors.zerocater.com/vendors?name=testing&filter[id__in]=[1,2,3]'
+
+        result_url = get_route_from_fk('Vendor', query_params={'filter[id__in]': '[1,2,3]', 'name': 'testing'})
+
+        mock_requests.get.assert_called_once_with(self.gateway_root_path)
+        self.assertIn(result_url, [expected_url_1, expected_url_2])
+
+    def test_correct_resource_type_with_all_parameters(self, mock_zc_settings, mock_requests):
+        self.bind_mock_objects(mock_zc_settings, mock_requests)
+        expected_url = 'https://mp-vendors.zerocater.com/vendors/1?filter[id__in]=[1,2,3]'
+
+        result_url = get_route_from_fk('Vendor', path_params={'id': '1'},  query_params={'filter[id__in]': '[1,2,3]'})
+
+        mock_requests.get.assert_called_once_with(self.gateway_root_path)
+        self.assertEqual(expected_url, result_url)
+
+    def test_correct_resource_type_with_wrong_path_parameters(self, mock_zc_settings, mock_requests):
+        self.bind_mock_objects(mock_zc_settings, mock_requests)
+        self.assertRaises(Exception, get_route_from_fk, 'User', {'pk': '1'})
+        mock_requests.get.assert_called_once_with(self.gateway_root_path)
 
 
 class ServiceRequestTestCase(TestCase):
