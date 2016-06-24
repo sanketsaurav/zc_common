@@ -159,21 +159,9 @@ class RouteRetrievalTestCase(TestCase):
     def setUp(self):
         self.gateway_root_path = 'http://mp-gateway.zerocater.com'
         self.mappings = {
-            '/users': {
-                'domain': 'https://mp-users.zerocater.com',
-                'resource_type': 'User'
-            },
             '/users{/id}': {
                 'domain': 'https://mp-users.zerocater.com',
                 'resource_type': 'User'
-            },
-            '/vendors': {
-                'domain': 'https://mp-vendors.zerocater.com',
-                'resource_type': 'Vendor'
-            },
-            '/vendors{/id}': {
-                'domain': 'https://mp-vendors.zerocater.com',
-                'resource_type': 'Vendor'
             }
         }
         self.get_response = mock.Mock()
@@ -188,56 +176,23 @@ class RouteRetrievalTestCase(TestCase):
         resource_type = 'Movie'
         self.assertRaises(Exception, get_route_from_fk, resource_type)
 
-    def test_correct_resource_type_without_parameters(self, mock_zc_settings, mock_requests):
-        self.bind_mock_objects(mock_zc_settings, mock_requests)
-        expected_url = 'https://mp-users.zerocater.com/users'
-
-        result_url = get_route_from_fk('User')
-
-        mock_requests.get.assert_called_once_with(self.gateway_root_path)
-        self.assertEqual(expected_url, result_url)
-
-    def test_correct_resource_type_with_path_parameters(self, mock_zc_settings, mock_requests):
+    def test_correct_resource_type_with_one_pk(self, mock_zc_settings, mock_requests):
         self.bind_mock_objects(mock_zc_settings, mock_requests)
         expected_url = 'https://mp-users.zerocater.com/users/1'
 
-        result_url = get_route_from_fk('User', {'id': 1})
+        result_url = get_route_from_fk('User', 1)
 
         mock_requests.get.assert_called_once_with(self.gateway_root_path)
         self.assertEqual(expected_url, result_url)
 
-    def test_correct_resource_type_with_one_query_parameter(self, mock_zc_settings, mock_requests):
+    def test_correct_resource_type_with_multiple_pk(self, mock_zc_settings, mock_requests):
         self.bind_mock_objects(mock_zc_settings, mock_requests)
-        expected_url = 'https://mp-vendors.zerocater.com/vendors?filter[id__in]=[1,2,3]'
+        expected_url = 'https://mp-users.zerocater.com/users?filter[id__in]=1,2,3'
 
-        result_url = get_route_from_fk('Vendor', query_params={'filter[id__in]': '[1,2,3]'})
+        result_url = get_route_from_fk('User', [1, 2, 3])
 
         mock_requests.get.assert_called_once_with(self.gateway_root_path)
         self.assertEqual(expected_url, result_url)
-
-    def test_correct_resource_type_with_more_query_parameters(self, mock_zc_settings, mock_requests):
-        self.bind_mock_objects(mock_zc_settings, mock_requests)
-        expected_url_1 = 'https://mp-vendors.zerocater.com/vendors?filter[id__in]=[1,2,3]&name=testing'
-        expected_url_2 = 'https://mp-vendors.zerocater.com/vendors?name=testing&filter[id__in]=[1,2,3]'
-
-        result_url = get_route_from_fk('Vendor', query_params={'filter[id__in]': '[1,2,3]', 'name': 'testing'})
-
-        mock_requests.get.assert_called_once_with(self.gateway_root_path)
-        self.assertIn(result_url, [expected_url_1, expected_url_2])
-
-    def test_correct_resource_type_with_all_parameters(self, mock_zc_settings, mock_requests):
-        self.bind_mock_objects(mock_zc_settings, mock_requests)
-        expected_url = 'https://mp-vendors.zerocater.com/vendors/1?filter[id__in]=[1,2,3]'
-
-        result_url = get_route_from_fk('Vendor', path_params={'id': '1'},  query_params={'filter[id__in]': '[1,2,3]'})
-
-        mock_requests.get.assert_called_once_with(self.gateway_root_path)
-        self.assertEqual(expected_url, result_url)
-
-    def test_correct_resource_type_with_wrong_path_parameters(self, mock_zc_settings, mock_requests):
-        self.bind_mock_objects(mock_zc_settings, mock_requests)
-        self.assertRaises(Exception, get_route_from_fk, 'User', {'pk': '1'})
-        mock_requests.get.assert_called_once_with(self.gateway_root_path)
 
 
 class ServiceRequestTestCase(TestCase):

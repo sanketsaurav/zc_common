@@ -44,27 +44,19 @@ class RemoteResourceListWrapper(list):
         map(lambda x: self.append(RemoteResourceWrapper(x)), self.data)
 
 
-def get_route_from_fk(resource_type, path_params={}, query_params={}):
-    """Gets a fully qualified URI for a given resource_type and url_param_values."""
+def get_route_from_fk(resource_type, pk=None):
+    """Gets a fully qualified URL for a given resource_type, pk"""
     routes = requests.get(zc_settings.GATEWAY_ROOT_PATH).json()
 
     for route in routes.iterkeys():
         if 'resource_type' in routes[route] and routes[route]['resource_type'] == resource_type:
-            route_path_params = variables(route)
-            provided_path_params = set(path_params.keys())
+            if isinstance(pk, (list, set)):
+                expanded = '{}?filter[id__in]={}'.format(expand(route, {}), ','.join([str(x) for x in pk]))
+            else:
+                expanded = expand(route, {'id': pk})
+            return '{0}{1}'.format(routes[route]['domain'], expanded)
 
-            if route_path_params.difference(provided_path_params) == provided_path_params.difference(route_path_params):
-                expanded = expand(route, path_params)
-                qualified_url = '{0}{1}'.format(routes[route]['domain'], expanded)
-
-                # Add query parameters provided
-                if query_params:
-                    expanded_query_params = "&".join(["{0}={1}".format(key, query_params.get(key)) for key in query_params])
-                    qualified_url = '{0}?{1}'.format(qualified_url, expanded_query_params)
-
-                return qualified_url
-
-    raise Exception('No route with resource_type: {0}, path_params: {1}, query_params: {2}'.format(resource_type, path_params, query_params))
+    raise Exception('No route for resource_type: "{0}"'.format(resource_type))
 
 
 def make_service_request(service_name, endpoint):
