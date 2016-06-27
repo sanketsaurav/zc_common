@@ -35,17 +35,20 @@ pip install djangorestframework_jwt
 Next, you'll need to add the following lines to your `settings.py`:
 ```python
 JWT_AUTH = {
-    'JWT_VERIFY': False,
+    'JWT_SECRECT_KEY': os.environ.get('JWT_SECRET_KEY', None)
+    'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': False
 }
-```
 
-Then, import the `JWTAuthentication` class and include it.
-```python
-from zc_common.jwt_auth import JWTAuthentication
-
-class MyView(ApiView):
-  authentication_classes = (JWTAuthentication,)
+# Update the REST_FRAMEWORK settings with these values.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'zc_common.jwt_auth.authentication.JWTAuthentication',
+    )
+    'DEFAULT_PERMISSION_CLASSES': (
+        'zc_common.jwt_auth.permissions.DefaultPermission',
+    )
+}
 ```
 
 ### Permissions
@@ -101,9 +104,7 @@ class OrderDetailView(generics.RetrieveAPIView):
   A simple detail view that requires the user to be authenticated, and the
   owner of the specific order.
   '''
-  
-  # JWTAuthentication decodes the JWT and assigns the payload to `request.user`
-  authentication_classes = (JWTAuthentication,)
+ 
   permission_classes = (IsOrderOwner,)
   queryset = Order.objects.all()
 ```

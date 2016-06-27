@@ -60,7 +60,7 @@ class JWTAuthentication(BaseAuthentication):
         """
         jwt_value = self.get_jwt_value(request)
         if jwt_value is None:
-            return None
+            raise exceptions.NotAuthenticated()
 
         try:
             payload = jwt_decode_handler(jwt_value)
