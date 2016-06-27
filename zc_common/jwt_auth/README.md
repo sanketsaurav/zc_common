@@ -40,13 +40,10 @@ JWT_AUTH = {
     'JWT_VERIFY_EXPIRATION': False
 }
 
-# Update the REST_FRAMEWORK settings with these values.
+# Set a default authentication class.
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'zc_common.jwt_auth.authentication.JWTAuthentication',
-    )
-    'DEFAULT_PERMISSION_CLASSES': (
-        'zc_common.jwt_auth.permissions.DefaultPermission',
     )
 }
 ```
