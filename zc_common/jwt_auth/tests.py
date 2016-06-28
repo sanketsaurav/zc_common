@@ -5,32 +5,6 @@ from django.contrib.admindocs.views import extract_views_from_urlpatterns, simpl
 from django.conf import settings
 
 
-def clean_raw_urls(template_urls, default_value='1'):
-    """
-    Remove urls that we don't want to include.
-    """
-    result_urls = []
-    pattern = re.compile(r'<\w+>')
-
-    for url in template_urls:
-        if url.find('<format>') != -1:
-            continue
-
-        if url == u'/':
-            continue
-
-        if url == u'/health':
-            continue
-
-        parameters = pattern.findall(url)
-        for param in parameters:
-            url = url.replace(param, default_value)
-
-        result_urls.append(url)
-
-    return result_urls
-
-
 def get_service_endpoint_urls(urlconfig=None, default_value='1'):
     """
     This function finds all endpoint urls in a service.
@@ -54,5 +28,25 @@ def get_service_endpoint_urls(urlconfig=None, default_value='1'):
     extracted_views = extract_views_from_urlpatterns(urlconfig_mod.urlpatterns)
     views_regex_url_patterns = [item[1] for item in extracted_views]
     simplified_regex_url_patterns = [simplify_regex(pattern) for pattern in views_regex_url_patterns]
-    endpoint_urls = clean_raw_urls(simplified_regex_url_patterns)
-    return endpoint_urls
+
+    # Strip out urls we don't need to test.
+    result_urls = []
+    pattern = re.compile(r'<\w+>')
+
+    for url in simplified_regex_url_patterns:
+        if url.find('<format>') != -1:
+            continue
+
+        if url == u'/':
+            continue
+
+        if url == u'/health':
+            continue
+
+        parameters = pattern.findall(url)
+        for param in parameters:
+            url = url.replace(param, default_value)
+
+        result_urls.append(url)
+
+    return result_urls
