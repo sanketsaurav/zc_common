@@ -2,39 +2,7 @@ import re
 from importlib import import_module
 
 from django.contrib.admindocs.views import extract_views_from_urlpatterns, simplify_regex
-from django.core.urlresolvers import RegexURLPattern, RegexURLResolver
 from django.conf import settings
-
-
-def get_url_patterns(url_patterns_or_resolvers):
-    """
-    Extract all RegexURLPattern objects from a RegexURLResolver.
-    """
-    urls_patterns = []
-    for item in url_patterns_or_resolvers:
-        if isinstance(item, RegexURLPattern):
-            urls_patterns.append(item)
-
-        if isinstance(item, RegexURLResolver):
-            urls_patterns.extend(get_url_patterns(item.url_patterns))
-    return urls_patterns
-
-
-def get_raw_urls(url_patterns):
-    """
-    Extract urls from a list of RegexURLPattern.
-
-    The path parameters will still be in the resulting url. Here's is an example of response:
-    [u'/caterers/<pk>', u'/vendors/<pk>']
-    """
-    views = extract_views_from_urlpatterns(url_patterns)
-    template_urls = []
-
-    for view in views:
-        url = simplify_regex(view[1])
-        template_urls.append(url)
-
-    return template_urls
 
 
 def clean_raw_urls(template_urls, default_value='1'):
@@ -83,7 +51,8 @@ def get_service_endpoint_urls(urlconfig=None, default_value='1'):
         raise Exception(
             "Unable to import url config module. Url Config: {0}. Message: {1}".format(urlconfig, ex.message))
 
-    url_patterns = get_url_patterns(urlconfig_mod.urlpatterns)
-    template_urls = get_raw_urls(url_patterns)
-    endpoint_urls = clean_raw_urls(template_urls)
+    extracted_views = extract_views_from_urlpatterns(urlconfig_mod.urlpatterns)
+    views_regex_url_patterns = [item[1] for item in extracted_views]
+    simplified_regex_url_patterns = [simplify_regex(pattern) for pattern in views_regex_url_patterns]
+    endpoint_urls = clean_raw_urls(simplified_regex_url_patterns)
     return endpoint_urls
