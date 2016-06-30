@@ -146,6 +146,12 @@ We have created a custom paginator to include the `self` link to GET responses t
 
 To use this paginator instead of the default one, modify the `DEFAULT_PAGINATION_CLASS` setting in your `settings.py` file to `'zc_common.remote_resource.pagination.PageNumberPagination',` (this is already the case if you copied the block at the top of this README into your settings file).
 
+## Making HTTP requests to other services
+
+* Service-to-service communication requires a valid JWT token. You can make your requests have a proper token by using functions provided in `zc_common.remote_resource.request.py` module.
+* If you want to retrieve a remote resource, you can use the shortcut method `zc_common.remote_resource.request.get_remote_resource`. Basically, it parses response content to an instance of `zc_common.remote_resource.request.RemoteResourceWrapper` or `zc_common.remote_resource.request.RemoteResourceListWrapper` based on whether the returned `data` is only one resource or a list of resources, respectively. 
+* If you desire to make a request other than a `GET`, or want to manipulate the content of the response, you can use `zc_common.remote_resource.request.make_service_request` function. Currently, supported methods are restricted to `GET` and `POST`.
+
 ## TODO/Known Issues
 
 * Following the relationship `self` link from within the service (e.g. `/companies/1/relationships/billing_addres`) does not include a top-level links object.
