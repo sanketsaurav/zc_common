@@ -29,6 +29,7 @@ class RemoteResourceException(Exception):
 
 
 class RemoteResourceWrapper(object):
+
     def __init__(self, data):
         self.data = data
         self.create_properties_from_data()
@@ -56,6 +57,7 @@ class RemoteResourceWrapper(object):
 
 
 class RemoteResourceListWrapper(list):
+
     def __init__(self, data):
         self.data = data
         self.add_items_from_data()
@@ -106,14 +108,14 @@ def make_service_request(service_name, endpoint, method=GET, data=None):
             response.status_code, response.reason, response.url, response.text)
         raise ServiceRequestException(http_error_msg)
 
-    return response.text
+    return response
 
 
 def get_remote_resource(service_name, resource_type, pk):
     """A shortcut function to make a GET request to a remote service."""
     url = get_route_from_fk(resource_type, pk)
     response = make_service_request(service_name, url)
-    json_response = json.loads(response)
+    json_response = json.loads(response.text)
 
     if 'data' in json_response:
         resource_data = json_response['data']
