@@ -8,8 +8,8 @@ from zc_common.settings import zc_settings
 
 
 # Requests that can be made to another service
-HTTP_GET = 'get'
-HTTP_POST = 'post'
+GET = 'get'
+POST = 'post'
 
 
 class UnsupportedHTTPMethodException(Exception):
@@ -29,7 +29,6 @@ class RemoteResourceException(Exception):
 
 
 class RemoteResourceWrapper(object):
-
     def __init__(self, data):
         self.data = data
         self.create_properties_from_data()
@@ -80,7 +79,7 @@ def get_route_from_fk(resource_type, pk=None):
     raise RouteNotFoundException('No route for resource_type: "{0}"'.format(resource_type))
 
 
-def make_service_request(service_name, endpoint, method=HTTP_GET, data=None):
+def make_service_request(service_name, endpoint, method=GET, data=None):
     """
     Makes a JWT token-authenticated service request to the URL provided.
 
@@ -96,13 +95,11 @@ def make_service_request(service_name, endpoint, method=HTTP_GET, data=None):
     jwt_token = jwt_encode_handler(service_jwt_payload_handler(service_name))
     headers = {'Authorization': 'JWT {}'.format(jwt_token), 'Content-Type': 'application/vnd.api+json'}
 
-    if method == HTTP_GET:
-        response = requests.get(endpoint, headers=headers)
-    elif method == HTTP_POST:
-        response = requests.post(endpoint, json=data, headers=headers)
-    else:
+    if not method in [GET, POST]:
         raise UnsupportedHTTPMethodException(
             "Method {0} is not supported. service_name: {1}, endpoint: {2}".format(method, service_name, endpoint))
+
+    response = getattr(requests, method)(endpoint, headers=headers, json=data)
 
     if 400 <= response.status_code < 600:
         http_error_msg = '{0} Error: {1} for url: {2}. Content: {3}'.format(

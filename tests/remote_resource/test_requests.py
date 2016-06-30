@@ -3,7 +3,7 @@ import json
 from django.test import TestCase
 from zc_common.remote_resource.request import (
     RemoteResourceWrapper, RemoteResourceListWrapper, get_route_from_fk, make_service_request, get_remote_resource,
-    RouteNotFoundException, HTTP_GET)
+    RouteNotFoundException, GET, POST)
 
 
 class WrappersTestCase(TestCase):
@@ -156,7 +156,6 @@ class WrappersTestCase(TestCase):
 @mock.patch('zc_common.remote_resource.request.requests')
 @mock.patch('zc_common.remote_resource.request.zc_settings')
 class GetRouteFromForeignKeyTestCase(TestCase):
-
     def setUp(self):
         self.gateway_root_path = 'http://mp-gateway.zerocater.com'
         self.mappings = {
@@ -196,36 +195,69 @@ class GetRouteFromForeignKeyTestCase(TestCase):
         self.assertEqual(expected_url, result_url)
 
 
+@mock.patch('zc_common.remote_resource.request.requests')
+@mock.patch('zc_common.remote_resource.request.jwt_encode_handler', autospec=True)
+@mock.patch('zc_common.remote_resource.request.service_jwt_payload_handler', autospec=True)
 class MakeServiceRequestTestCase(TestCase):
-
-    @mock.patch('zc_common.remote_resource.request.requests')
-    @mock.patch('zc_common.remote_resource.request.jwt_encode_handler', autospec=True)
-    @mock.patch('zc_common.remote_resource.request.service_jwt_payload_handler', autospec=True)
-    def test_get_endpoint(self, mock_jwt_payload_handler, mock_jwt_encode_handler,  mock_requests):
-        token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' \
+    def setUp(self):
+        self.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' \
                 'eyJzZXJ2aWNlTmFtZSI6Im1wLXVzZXJzIiwicm9sZXMiOlsic2VydmljZSJdfQ.' \
                 'AorXWnXhKzht7Psn_P_JVcEIRZptdk4synXUf6fr7_0'
-        endpoint = 'http://mp-users.herokuapp.com/users/1'
-        service_name = 'mp-users'
-        payload = {
-            'serviceName': service_name,
+
+        self.service_name = 'test'
+        self.payload = {
+            'serviceName': self.service_name,
             'roles': ['Service']
         }
-        headers = {'Authorization': 'JWT {}'.format(token), 'Content-Type': 'application/vnd.api+json'}
+        self.endpoint = 'http://mp-users.herokuapp.com/users/1'
+        self.headers = {'Authorization': 'JWT {}'.format(self.token), 'Content-Type': 'application/vnd.api+json'}
+
+    def bind_mocked_objects(self, mock_jwt_payload_handler, mock_jwt_encode_handler):
+        mock_jwt_payload_handler.return_value = self.payload
+        mock_jwt_encode_handler.return_value = self.token
+
+    def assert_mocked_objects(self, mock_jwt_payload_handler, mock_jwt_encode_handler):
+        mock_jwt_payload_handler.assert_called_once_with(self.service_name)
+        mock_jwt_encode_handler.assert_called_once_with(self.payload)
+
+    def test_get_endpoint(self, mock_jwt_payload_handler, mock_jwt_encode_handler,  mock_requests):
         expected_response_data = '{"data": null}'
         get_response_object = mock.Mock()
         get_response_object.text = expected_response_data
         get_response_object.status_code = 200
 
-        mock_jwt_payload_handler.return_value = payload
-        mock_jwt_encode_handler.return_value = token
+        self.bind_mocked_objects(mock_jwt_payload_handler, mock_jwt_encode_handler)
         mock_requests.get.return_value = get_response_object
 
-        actual_response_data = make_service_request(service_name, endpoint, method=HTTP_GET)
+        actual_response_data = make_service_request(self.service_name, self.endpoint, method=GET)
 
-        mock_jwt_payload_handler.assert_called_once_with(service_name)
-        mock_jwt_encode_handler.assert_called_once_with(payload)
-        mock_requests.get.assert_called_once_with(endpoint, headers=headers)
+        self.assert_mocked_objects(mock_jwt_payload_handler, mock_jwt_encode_handler)
+        mock_requests.get.assert_called_once_with(self.endpoint, headers=self.headers, json=None)
+        self.assertEqual(actual_response_data, expected_response_data)
+
+    def test_post_endpoint(self, mock_jwt_payload_handler, mock_jwt_encode_handler,  mock_requests):
+        expected_response_data = ''
+        post_data = {
+            'data': {
+                'type': 'User',
+                'attributes': {
+                    'email': 'test@zerocater.com',
+                    'password': 'test',
+                    'name': 'Test This'
+                }
+            }
+        }
+        post_response_object = mock.Mock()
+        post_response_object.text = expected_response_data
+        post_response_object.status_code = 200
+
+        self.bind_mocked_objects(mock_jwt_payload_handler, mock_jwt_encode_handler)
+        mock_requests.post.return_value = post_response_object
+
+        actual_response_data = make_service_request(self.service_name, self.endpoint, method=POST, data=post_data)
+
+        self.assert_mocked_objects(mock_jwt_payload_handler, mock_jwt_encode_handler)
+        mock_requests.post.assert_called_once_with(self.endpoint, headers=self.headers, json=post_data)
         self.assertEqual(actual_response_data, expected_response_data)
 
 
