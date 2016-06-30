@@ -1,8 +1,9 @@
 import mock
 import json
 from django.test import TestCase
-from zc_common.remote_resource.request import \
-    RemoteResourceWrapper, RemoteResourceListWrapper, get_route_from_fk, make_service_request, get_remote_resource
+from zc_common.remote_resource.request import (
+    RemoteResourceWrapper, RemoteResourceListWrapper, get_route_from_fk, make_service_request, get_remote_resource,
+    RouteNotFoundException, HTTP_GET)
 
 
 class WrappersTestCase(TestCase):
@@ -154,7 +155,7 @@ class WrappersTestCase(TestCase):
 
 @mock.patch('zc_common.remote_resource.request.requests')
 @mock.patch('zc_common.remote_resource.request.zc_settings')
-class RouteRetrievalTestCase(TestCase):
+class GetRouteFromForeignKeyTestCase(TestCase):
 
     def setUp(self):
         self.gateway_root_path = 'http://mp-gateway.zerocater.com'
@@ -174,7 +175,7 @@ class RouteRetrievalTestCase(TestCase):
     def test_wrong_resource_type(self, mock_zc_settings, mock_requests):
         self.bind_mock_objects(mock_zc_settings, mock_requests)
         resource_type = 'Movie'
-        self.assertRaises(Exception, get_route_from_fk, resource_type)
+        self.assertRaises(RouteNotFoundException, get_route_from_fk, resource_type)
 
     def test_correct_resource_type_with_one_pk(self, mock_zc_settings, mock_requests):
         self.bind_mock_objects(mock_zc_settings, mock_requests)
@@ -195,12 +196,12 @@ class RouteRetrievalTestCase(TestCase):
         self.assertEqual(expected_url, result_url)
 
 
-class ServiceRequestTestCase(TestCase):
+class MakeServiceRequestTestCase(TestCase):
 
     @mock.patch('zc_common.remote_resource.request.requests')
     @mock.patch('zc_common.remote_resource.request.jwt_encode_handler', autospec=True)
     @mock.patch('zc_common.remote_resource.request.service_jwt_payload_handler', autospec=True)
-    def test_endpoint_reached(self, mock_jwt_payload_handler, mock_jwt_encode_handler,  mock_requests):
+    def test_get_endpoint(self, mock_jwt_payload_handler, mock_jwt_encode_handler,  mock_requests):
         token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' \
                 'eyJzZXJ2aWNlTmFtZSI6Im1wLXVzZXJzIiwicm9sZXMiOlsic2VydmljZSJdfQ.' \
                 'AorXWnXhKzht7Psn_P_JVcEIRZptdk4synXUf6fr7_0'
@@ -211,15 +212,16 @@ class ServiceRequestTestCase(TestCase):
             'roles': ['Service']
         }
         headers = {'Authorization': 'JWT {}'.format(token), 'Content-Type': 'application/vnd.api+json'}
-        expected_response_data = json.loads('{"data": null}')
+        expected_response_data = '{"data": null}'
         get_response_object = mock.Mock()
-        get_response_object.json.return_value = expected_response_data
+        get_response_object.text = expected_response_data
+        get_response_object.status_code = 200
 
         mock_jwt_payload_handler.return_value = payload
         mock_jwt_encode_handler.return_value = token
         mock_requests.get.return_value = get_response_object
 
-        actual_response_data = make_service_request(service_name, endpoint)
+        actual_response_data = make_service_request(service_name, endpoint, method=HTTP_GET)
 
         mock_jwt_payload_handler.assert_called_once_with(service_name)
         mock_jwt_encode_handler.assert_called_once_with(payload)
@@ -229,7 +231,7 @@ class ServiceRequestTestCase(TestCase):
 
 @mock.patch('zc_common.remote_resource.request.make_service_request', autospec=True)
 @mock.patch('zc_common.remote_resource.request.get_route_from_fk', autospec=True)
-class RemoteResourceRetrievalTestCase(TestCase):
+class GetRemoteResourceTestCase(TestCase):
 
     def setUp(self):
         self.service_name = 'mp-users'
@@ -246,7 +248,7 @@ class RemoteResourceRetrievalTestCase(TestCase):
         }
 
         mock_get_route_from_fk.return_value = self.endpoint
-        mock_make_service_request.return_value = response_data
+        mock_make_service_request.return_value = json.dumps(response_data)
 
         wrapped_resource = get_remote_resource(self.service_name, self.resource_type, self.params)
 
@@ -267,7 +269,7 @@ class RemoteResourceRetrievalTestCase(TestCase):
         }
 
         mock_get_route_from_fk.return_value = self.endpoint
-        mock_make_service_request.return_value = response_data
+        mock_make_service_request.return_value = json.dumps(response_data)
 
         wrapped_resource = get_remote_resource(self.service_name, self.resource_type, self.params)
 

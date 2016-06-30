@@ -1,10 +1,31 @@
-import re
+import json
 import requests
 from inflection import underscore
-from uritemplate import expand, variables
+from uritemplate import expand
 
 from zc_common.jwt_auth.utils import service_jwt_payload_handler, jwt_encode_handler
 from zc_common.settings import zc_settings
+
+
+# Requests that can be made to another service
+HTTP_GET = 'get'
+HTTP_POST = 'post'
+
+
+class UnsupportedHTTPMethodException(Exception):
+    pass
+
+
+class RouteNotFoundException(Exception):
+    pass
+
+
+class ServiceRequestException(Exception):
+    pass
+
+
+class RemoteResourceException(Exception):
+    pass
 
 
 class RemoteResourceWrapper(object):
@@ -56,29 +77,53 @@ def get_route_from_fk(resource_type, pk=None):
                 expanded = expand(route, {'id': pk})
             return '{0}{1}'.format(routes[route]['domain'], expanded)
 
-    raise Exception('No route for resource_type: "{0}"'.format(resource_type))
+    raise RouteNotFoundException('No route for resource_type: "{0}"'.format(resource_type))
 
 
-def make_service_request(service_name, endpoint):
-    """Makes a JWT authenticated service request to the URL provided and returns the response.
-    Returns a dictionary of the returned response.
+def make_service_request(service_name, endpoint, method=HTTP_GET, data=None):
     """
+    Makes a JWT token-authenticated service request to the URL provided.
+
+    Args:
+        service_name: name of the service making this request. e.g. mp-users
+        endpoint: the url to use
+        method: HTTP method. supported methods are defined at this module's global variables
+        data: request payload in case we are making a POST request
+
+    Returns: text content of the response
+    """
+
     jwt_token = jwt_encode_handler(service_jwt_payload_handler(service_name))
     headers = {'Authorization': 'JWT {}'.format(jwt_token), 'Content-Type': 'application/vnd.api+json'}
-    response = requests.get(endpoint, headers=headers)
-    return response.json()
+
+    if method == HTTP_GET:
+        response = requests.get(endpoint, headers=headers)
+    elif method == HTTP_POST:
+        response = requests.post(endpoint, json=data, headers=headers)
+    else:
+        raise UnsupportedHTTPMethodException(
+            "Method {0} is not supported. service_name: {1}, endpoint: {2}".format(method, service_name, endpoint))
+
+    if 400 <= response.status_code < 600:
+        http_error_msg = '{0} Error: {1} for url: {2}. Content: {3}'.format(
+            response.status_code, response.reason, response.url, response.text)
+        raise ServiceRequestException(http_error_msg)
+
+    return response.text
 
 
-def get_remote_resource(service_name, resource_type, url_param_values):
-    url = get_route_from_fk(resource_type, url_param_values)
-    response_data = make_service_request(service_name, url)
+def get_remote_resource(service_name, resource_type, pk):
+    """A shortcut function to make a GET request to a remote service."""
+    url = get_route_from_fk(resource_type, pk)
+    response = make_service_request(service_name, url)
+    json_response = json.loads(response)
 
-    if 'data' in response_data:
-        resource_data = response_data['data']
+    if 'data' in json_response:
+        resource_data = json_response['data']
         if isinstance(resource_data, list):
             return RemoteResourceListWrapper(resource_data)
         return RemoteResourceWrapper(resource_data)
 
-    msg = "Error while retrieving resource. ServiceName: {0}, ResourceType: {1}, UrlParamValues: {2}, " \
-          "ResponseData: {3}".format(service_name, resource_type, url_param_values, response_data)
-    raise Exception(msg)
+    msg = "Error retrieving resource. service_name: {0}, resource_type: {1}, pk: {2}, " \
+          "response: {3}".format(service_name, resource_type, pk, response)
+    raise RemoteResourceException(msg)
