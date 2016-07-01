@@ -21,8 +21,8 @@ def now(tz=None):
 
     if settings.USE_TZ:
         tz = _get_tz(tz)
-        now = python_datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-        return localtime(now, tz=tz)
+        now_dt = python_datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+        return localtime(now_dt, tz=tz)
     else:
         return python_datetime.datetime.now()
 

@@ -1,14 +1,12 @@
 from __future__ import unicode_literals
-import exceptions
 
 from django.db import models
-from django_extensions.db.models import TimeStampedModel
 
 
 class RemoteResource(object):
-    def __init__(self, type_name, id):
+    def __init__(self, type_name, pk):
         self.type = type_name
-        self.id = id
+        self.id = pk
 
 
 class RemoteForeignKey(models.CharField):

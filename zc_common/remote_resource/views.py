@@ -3,7 +3,7 @@ from django.db.models.manager import Manager
 from django.db.models.query import QuerySet
 from rest_framework import viewsets
 from rest_framework.exceptions import MethodNotAllowed
-from rest_framework_json_api.views import RelationshipView
+from rest_framework_json_api.views import RelationshipView as OldRelView
 
 from zc_common.remote_resource.models import RemoteResource
 from zc_common.remote_resource.serializers import ResourceIdentifierObjectSerializer
@@ -41,7 +41,7 @@ class ModelViewSet(viewsets.ModelViewSet):
         return hasattr(self.request, 'query_params') and 'filter[id__in]' in self.request.query_params
 
 
-class RelationshipView(RelationshipView):
+class RelationshipView(OldRelView):
     serializer_class = ResourceIdentifierObjectSerializer
 
     def patch(self, request, *args, **kwargs):

@@ -1,5 +1,3 @@
-import requests
-
 from .request import make_service_request, get_route_from_fk
 
 

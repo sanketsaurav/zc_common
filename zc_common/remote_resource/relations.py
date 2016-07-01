@@ -1,12 +1,11 @@
 from collections import OrderedDict
 import json
-import six
 
+import six
 from django.db.models.manager import BaseManager
-from rest_framework.relations import *
 from rest_framework_json_api.relations import ResourceRelatedField
 
-from zc_common.remote_resource.models import *
+from zc_common.remote_resource.models import RemoteResource
 
 
 class RemoteResourceField(ResourceRelatedField):

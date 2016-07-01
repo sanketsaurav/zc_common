@@ -3,7 +3,8 @@ import json
 from inflection import camelize
 from rest_framework import status
 from rest_framework.reverse import reverse
-from .tests import USER, STAFF, SERVICE
+
+from .tests import USER, STAFF
 
 
 class ResourceCreateTestCase(object):
@@ -175,7 +176,6 @@ class ResourceUpdateTestCase(object):
         update_data['data']['attributes'] = {attribute_name: new_attribute_value}
 
         response = self.get_patch_response(update_data)
-        json_response = self.load_json(response)
 
         self.success_response_structure_test(response, status.HTTP_200_OK)
 

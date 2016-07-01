@@ -7,12 +7,13 @@ from rest_framework_jwt.utils import jwt_decode_handler
 
 
 class User(object):
-    '''
+    """
     A class that emulates Django's auth User, for use with microservices where
     the actual User is unavailable. Surfaces via `request.user`.
-    '''
+    """
 
     def __init__(self, **kwargs):
+        self.roles = []
         for kwarg in kwargs:
             setattr(self, kwarg, kwargs[kwarg])
 
@@ -20,24 +21,25 @@ class User(object):
         return 'user' in self.roles or 'service' in self.roles
 
     def get_roles(self):
-        '''
-            Note: For testing purposes only. Emulates `get_roles` in
-                  https://github.com/ZeroCater/mp-users/blob/master/users/models.py
-        '''
+        """
+        For testing purposes only. Emulates `get_roles` in
+        https://github.com/ZeroCater/mp-users/blob/master/users/models.py
+        """
         return self.roles
 
 
 class JWTAuthentication(BaseAuthentication):
     """
-        Clients should authenticate by passing the token key in the "Authorization"
-        HTTP header, prepended with the string specified in the setting
-        `JWT_AUTH_HEADER_PREFIX`. For example:
+    Clients should authenticate by passing the token key in the "Authorization"
+    HTTP header, prepended with the string specified in the setting
+    `JWT_AUTH_HEADER_PREFIX`. For example:
 
-            Authorization: JWT eyJhbGciOiAiSFMyNTYiLCAidHlwIj
+        Authorization: JWT eyJhbGciOiAiSFMyNTYiLCAidHlwIj
     """
     www_authenticate_realm = 'api'
 
-    def get_jwt_value(self, request):
+    @staticmethod
+    def get_jwt_value(request):
         auth = get_authorization_header(request).split()
         auth_header_prefix = api_settings.JWT_AUTH_HEADER_PREFIX.lower()
 
@@ -77,12 +79,12 @@ class JWTAuthentication(BaseAuthentication):
 
         user = User(**payload)
 
-        return (user, jwt_value)
+        return user, jwt_value
 
     def authenticate_header(self, request):
         """
-            Return a string to be used as the value of the `WWW-Authenticate`
-            header in a `401 Unauthenticated` response, or `None` if the
-            authentication scheme should return `403 Permission Denied` responses.
+        Return a string to be used as the value of the `WWW-Authenticate`
+        header in a `401 Unauthenticated` response, or `None` if the
+        authentication scheme should return `403 Permission Denied` responses.
         """
         return '{0} realm="{1}"'.format(api_settings.JWT_AUTH_HEADER_PREFIX, self.www_authenticate_realm)

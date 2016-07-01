@@ -8,10 +8,10 @@ see:
 https://github.com/django-json-api/django-rest-framework-json-api/blob/develop/rest_framework_json_api/pagination.py
 """
 from collections import OrderedDict
+
 from django.utils.six.moves.urllib import parse as urlparse
-from rest_framework import serializers
+from rest_framework.pagination import PageNumberPagination as OldPagination
 from rest_framework.views import Response
-from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 
 
 def remove_query_param(url, key):
@@ -48,7 +48,7 @@ def replace_query_param(url, key, val):
     return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
 
 
-class PageNumberPagination(PageNumberPagination):
+class PageNumberPagination(OldPagination):
     """
     A json-api compatible pagination format
     """
@@ -63,13 +63,13 @@ class PageNumberPagination(PageNumberPagination):
         return replace_query_param(url, 'page', index)
 
     def get_paginated_response(self, data):
-        next = None
-        previous = None
+        next_page = None
+        previous_page = None
 
         if self.page.has_next():
-            next = self.page.next_page_number()
+            next_page = self.page.next_page_number()
         if self.page.has_previous():
-            previous = self.page.previous_page_number()
+            previous_page = self.page.previous_page_number()
 
         # hamedahmadi 05/02/2016 -- Adding this to include self link
         self_url = remove_query_param(self.request.build_absolute_uri(), self.page_query_param)
@@ -86,7 +86,7 @@ class PageNumberPagination(PageNumberPagination):
                 ('self', self_url),
                 ('first', self.build_link(1)),
                 ('last', self.build_link(self.page.paginator.num_pages)),
-                ('next', self.build_link(next)),
-                ('prev', self.build_link(previous))
+                ('next', self.build_link(next_page)),
+                ('prev', self.build_link(previous_page))
             ])
         })
