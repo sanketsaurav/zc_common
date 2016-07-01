@@ -1,5 +1,6 @@
 import re
 
+from django.db.models.fields.related import ManyToManyField
 from rest_framework import filters
 
 
@@ -23,6 +24,8 @@ class JSONAPIFilterBackend(filters.DjangoFilterBackend):
                     return queryset.none()
                 if 'id' in field_name:
                     query_params['{0}__{1}'.format(primary_key, extra)] = value
+                if isinstance(getattr(queryset.model, field_name).field, ManyToManyField):
+                    value = value.split(',')
                 query_params[field_name] = value
 
         if filter_class:
