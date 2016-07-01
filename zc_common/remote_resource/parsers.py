@@ -1,50 +1,13 @@
 """
 Parsers
 """
-from rest_framework import parsers
+from rest_framework_json_api import parsers
 from rest_framework.exceptions import ParseError
 
-from rest_framework_json_api import utils, renderers, exceptions
+from rest_framework_json_api import utils, exceptions
 
 
 class JSONParser(parsers.JSONParser):
-    """
-    A JSON API client will send a payload that looks like this:
-
-        {
-            "data": {
-                "type": "identities",
-                "id": 1,
-                "attributes": {
-                    "first_name": "John",
-                    "last_name": "Coltrane"
-                }
-            }
-        }
-
-    We extract the attributes so that DRF serializers can work as normal.
-    """
-    media_type = 'application/vnd.api+json'
-    renderer_class = renderers.JSONRenderer
-
-    @staticmethod
-    def parse_attributes(data):
-        return utils.format_keys(data.get('attributes'), 'underscore') if data.get('attributes') else dict()
-
-    @staticmethod
-    def parse_relationships(data):
-        relationships = (utils.format_keys(data.get('relationships'), 'underscore')
-                         if data.get('relationships') else dict())
-
-        # Parse the relationships
-        parsed_relationships = dict()
-        for field_name, field_data in relationships.items():
-            field_data = field_data.get('data')
-            if isinstance(field_data, dict) or field_data is None:
-                parsed_relationships[field_name] = field_data
-            elif isinstance(field_data, list):
-                parsed_relationships[field_name] = list(relation for relation in field_data)
-        return parsed_relationships
 
     @staticmethod
     def parse_metadata(result):
@@ -58,7 +21,7 @@ class JSONParser(parsers.JSONParser):
         """
         Parses the incoming bytestream as JSON and returns the resulting data
         """
-        result = super(JSONParser, self).parse(stream, media_type=media_type, parser_context=parser_context)
+        result = parsers.JSONParser.parse(self, stream, media_type=media_type, parser_context=parser_context)
 
         data = result.get('data')
 
