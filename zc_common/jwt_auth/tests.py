@@ -79,7 +79,6 @@ class AuthenticationMixin:
 
     def get_guest_token(self, user_id=1):
         user = self.create_user(['user'], user_id)
-        setattr(user, 'isGuest', True)
         return self.create_user_token(user)
 
     def get_anonymous_token(self, user_id):
