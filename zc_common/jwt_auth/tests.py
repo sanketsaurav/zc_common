@@ -69,25 +69,30 @@ class AuthenticationMixin:
         token = "JWT {}".format(jwt_encode_handler(payload))
         return token
 
-    def get_staff_token(self, user_id=1):
+    def get_staff_token(self, user_id):
         staff_user = self.create_user(['user', 'staff'], user_id)
         return self.create_user_token(staff_user)
 
-    def get_user_token(self, user_id=1):
+    def get_user_token(self, user_id):
         user = self.create_user(['user'], user_id)
         return self.create_user_token(user)
 
-    def get_guest_token(self, user_id=1):
+    def get_guest_token(self, user_id):
         user = self.create_user(['user'], user_id)
         return self.create_user_token(user)
 
-    def get_anonymous_token(self, user_id):
-        user = self.create_user(['anonymous'], user_id)
-        return self.create_user_token(user)
+    def get_anonymous_token(self):
+        return "JWT {}".format(jwt_encode_handler({'roles': ['anonymous']}))
 
-    def get_service_token(self, service_name='Test'):
+    def get_service_token(self, service_name):
         return self.create_service_token(service_name)
 
-    def authorize_as(self, user_type):
-        token = getattr(self, 'get_%s_token' % user_type)()
+    def authorize_as(self, user_type, **kwargs):
+        method = getattr(self, 'get_%s_token' % user_type)
+        if user_type == 'service':
+            token = method(kwargs.get('service_name', 'Test'))
+        elif user_type == 'anonymous':
+            token = method()
+        else:
+            token = method(kwargs.get('user_id', 1))
         self.client.credentials(HTTP_AUTHORIZATION=token)
