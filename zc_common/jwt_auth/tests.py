@@ -4,6 +4,9 @@ from importlib import import_module
 from django.contrib.admindocs.views import extract_views_from_urlpatterns, simplify_regex
 from django.conf import settings
 
+from .authentication import User
+from .utils import jwt_payload_handler, service_jwt_payload_handler, jwt_encode_handler
+
 
 def get_service_endpoint_urls(urlconfig=None, default_value='1'):
     """
@@ -50,3 +53,41 @@ def get_service_endpoint_urls(urlconfig=None, default_value='1'):
         result_urls.append(url)
 
     return result_urls
+
+
+class AuthenticationMixin:
+    def create_user(self, roles, user_id):
+        return User(roles=roles, pk=user_id)
+
+    def create_user_token(self, user):
+        payload = jwt_payload_handler(user)
+        token = "JWT {}".format(jwt_encode_handler(payload))
+        return token
+
+    def create_service_token(self, service_name):
+        payload = service_jwt_payload_handler(service_name)
+        token = "JWT {}".format(jwt_encode_handler(payload))
+        return token
+
+    def get_staff_token(self, user_id=1):
+        staff_user = self.create_user(['user', 'staff'], user_id)
+        return self.create_user_token(staff_user)
+
+    def get_user_token(self, user_id=1):
+        user = self.create_user(['user'], user_id)
+        return self.create_user_token(user)
+
+    def get_guest_token(self, user_id=1):
+        user = self.create_user(['user'], user_id)
+        return self.create_user_token(user)
+
+    def get_anonymous_token(self, user_id):
+        user = self.create_user(['anonymous'], user_id)
+        return self.create_user_token(user)
+
+    def get_service_token(self, service_name='Test'):
+        return self.create_service_token(service_name)
+
+    def authorize_as(self, user_type):
+        token = getattr(self, 'get_%s_token' % user_type)()
+        self.client.credentials(HTTP_AUTHORIZATION=token)
