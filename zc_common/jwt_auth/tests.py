@@ -81,9 +81,8 @@ class AuthenticationMixin:
         user = self.create_user(['user'], user_id)
         return self.create_user_token(user)
 
-    def get_anonymous_token(self, user_id):
-        user = self.create_user(['anonymous'], user_id)
-        return self.create_user_token(user)
+    def get_anonymous_token(self):
+        return "JWT {}".format(jwt_encode_handler({'roles': ['anonymous']}))
 
     def get_service_token(self, service_name='Test'):
         return self.create_service_token(service_name)
