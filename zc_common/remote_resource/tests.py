@@ -1,7 +1,6 @@
 import json
-from inflection import camelize, underscore, pluralize
 
-from django.test import TestCase
+from inflection import camelize, underscore, pluralize
 from rest_framework.test import APITestCase
 
 from zc_common.jwt_auth.authentication import User
@@ -27,7 +26,8 @@ class ResponseTestCase(APITestCase):
 
     USER_ROLE = USER
 
-    def convert_to_list(self, data):
+    @staticmethod
+    def convert_to_list(data):
         if isinstance(data, list):
             return data
 
@@ -173,16 +173,19 @@ class ResponseTestCase(APITestCase):
             self.assertTrue(
                 all(key in error for key in self.FAILURE_DATA_KEYS))
 
-    def load_json(self, response):
+    @staticmethod
+    def load_json(response):
         return json.loads(response.content.decode())
 
-    def generate_token(self, user):
+    @staticmethod
+    def generate_token(user):
         payload = jwt_payload_handler(user)
         token = jwt_encode_handler(payload)
 
         return "JWT {}".format(token)
 
-    def generate_user(self, roles, user_id=None):
+    @staticmethod
+    def generate_user(roles, user_id=None):
         if not user_id:
             user_id = '1'
         return User(pk=user_id, roles=roles)

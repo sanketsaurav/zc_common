@@ -1,8 +1,8 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework_json_api.utils import (
-    get_resource_type_from_model, get_resource_type_from_instance,
-    get_resource_type_from_serializer, get_included_serializers)
+    get_resource_type_from_model, get_resource_type_from_instance)
 
 from zc_common.remote_resource.models import RemoteResource
 

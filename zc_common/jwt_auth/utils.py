@@ -1,18 +1,19 @@
 import jwt
+from django.utils import encoding
 from rest_framework_jwt.settings import api_settings
 
 
 def jwt_payload_handler(user):
-    '''Constructs a payload for a user JWT.
+    """Constructs a payload for a user JWT.
     This is a slimmed down version of the handler in
     https://github.com/GetBlimp/django-rest-framework-jwt/
     
-    :param User: an object with `pk` and `get_roles()`
+    :param user: an object with `pk` and `get_roles()`
     :return: A dictionary that can be passed into `jwt_encode_handler`
-    '''
+    """
 
     payload = {
-        'id': user.pk,
+        'id': encoding.force_text(user.pk),
         'roles': user.get_roles(),
     }
 
@@ -22,11 +23,8 @@ def jwt_payload_handler(user):
 def service_jwt_payload_handler(service_name):
     """Constructs a payload for a service JWT.
 
-    Args:
-        service_name: a string corresponding to the name of the service where this JWT will be sent
-
-    Returns:
-        a dictionary that can be passed into `jwt_encode_handler`
+    :param service_name: a string corresponding to the name of the service where this JWT will be sent
+    :return: a dictionary that can be passed into `jwt_encode_handler`
     """
     payload = {
         'serviceName': service_name,
@@ -37,12 +35,11 @@ def service_jwt_payload_handler(service_name):
 
 
 def jwt_encode_handler(payload):
-    '''
-    Encodes a payload into a valid JWT.
+    """Encodes a payload into a valid JWT.
 
     :param payload: a dictionary
     :return: an encoded JWT string
-    '''
+    """
 
     return jwt.encode(
         payload,

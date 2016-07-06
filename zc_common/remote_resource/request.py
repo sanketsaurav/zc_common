@@ -60,8 +60,9 @@ class RemoteResourceWrapper(object):
 
 class RemoteResourceListWrapper(list):
 
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, seq):
+        super(RemoteResourceListWrapper, self).__init__(seq)
+        self.data = seq
         self.add_items_from_data()
 
     def add_items_from_data(self):
