@@ -10,6 +10,8 @@ from zc_common.settings import zc_settings
 # Requests that can be made to another service
 GET = 'get'
 POST = 'post'
+PUT = 'put'
+PATCH = 'patch'
 
 
 class UnsupportedHTTPMethodException(Exception):
@@ -97,7 +99,7 @@ def make_service_request(service_name, endpoint, method=GET, data=None):
     jwt_token = jwt_encode_handler(service_jwt_payload_handler(service_name))
     headers = {'Authorization': 'JWT {}'.format(jwt_token), 'Content-Type': 'application/vnd.api+json'}
 
-    if not method in [GET, POST]:
+    if not method in [GET, POST, PUT, PATCH]:
         raise UnsupportedHTTPMethodException(
             "Method {0} is not supported. service_name: {1}, endpoint: {2}".format(method, service_name, endpoint))
 
