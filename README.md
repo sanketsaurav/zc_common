@@ -1,7 +1,7 @@
 ## zc_common
 
 #### Installation
-Add `zc_common==0.2.0` to your `requirements.txt`
+`pip install zc_common`
 
 #### Usage
 
@@ -26,5 +26,4 @@ pip install -r requirements
 
 # Run the tests
 python runtests.py
-
 ```
