@@ -36,7 +36,6 @@ class ModelViewSet(viewsets.ModelViewSet):
                 fields['id'] = ['in', 'exact']
         return fields
 
-
     def has_ids_query_params(self):
         return hasattr(self.request, 'query_params') and 'filter[id__in]' in self.request.query_params
 

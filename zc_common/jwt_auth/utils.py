@@ -7,7 +7,7 @@ def jwt_payload_handler(user):
     """Constructs a payload for a user JWT.
     This is a slimmed down version of the handler in
     https://github.com/GetBlimp/django-rest-framework-jwt/
-    
+
     :param user: an object with `pk` and `get_roles()`
     :return: A dictionary that can be passed into `jwt_encode_handler`
     """
