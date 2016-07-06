@@ -229,7 +229,8 @@ class MakeServiceRequestTestCase(TestCase):
         self.bind_mocked_objects(mock_jwt_payload_handler, mock_jwt_encode_handler)
         mock_requests.get.return_value = get_response_object
 
-        actual_response_data = make_service_request(self.service_name, self.endpoint, method=GET)
+        response = make_service_request(self.service_name, self.endpoint, method=GET)
+        actual_response_data = response.text
 
         self.assert_mocked_objects(mock_jwt_payload_handler, mock_jwt_encode_handler)
         mock_requests.get.assert_called_once_with(self.endpoint, headers=self.headers, json=None)
@@ -254,7 +255,8 @@ class MakeServiceRequestTestCase(TestCase):
         self.bind_mocked_objects(mock_jwt_payload_handler, mock_jwt_encode_handler)
         mock_requests.post.return_value = post_response_object
 
-        actual_response_data = make_service_request(self.service_name, self.endpoint, method=POST, data=post_data)
+        response = make_service_request(self.service_name, self.endpoint, method=POST, data=post_data)
+        actual_response_data = response.text
 
         self.assert_mocked_objects(mock_jwt_payload_handler, mock_jwt_encode_handler)
         mock_requests.post.assert_called_once_with(self.endpoint, headers=self.headers, json=post_data)
@@ -279,8 +281,10 @@ class GetRemoteResourceTestCase(TestCase):
             }
         }
 
+        response_from_make_service_request = mock.Mock()
+        response_from_make_service_request.text = json.dumps(response_data)
         mock_get_route_from_fk.return_value = self.endpoint
-        mock_make_service_request.return_value = json.dumps(response_data)
+        mock_make_service_request.return_value = response_from_make_service_request
 
         wrapped_resource = get_remote_resource(self.service_name, self.resource_type, self.params)
 
@@ -300,8 +304,10 @@ class GetRemoteResourceTestCase(TestCase):
             ]
         }
 
+        response_from_make_service_request = mock.Mock()
+        response_from_make_service_request.text = json.dumps(response_data)
         mock_get_route_from_fk.return_value = self.endpoint
-        mock_make_service_request.return_value = json.dumps(response_data)
+        mock_make_service_request.return_value = response_from_make_service_request
 
         wrapped_resource = get_remote_resource(self.service_name, self.resource_type, self.params)
 
@@ -320,6 +326,8 @@ class GetRemoteResourceTestCase(TestCase):
             ]
         }
 
+        response_from_make_service_request = mock.Mock()
+        response_from_make_service_request.text = response_data
         mock_get_route_from_fk.return_value = self.endpoint
-        mock_make_service_request.return_value = response_data
+        mock_make_service_request.return_value = response_from_make_service_request
         self.assertRaises(Exception, get_remote_resource, self.service_name, self.resource_type, self.params)
