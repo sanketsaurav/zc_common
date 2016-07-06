@@ -90,25 +90,29 @@ class OrderDetailView(generics.RetrieveAPIView):
   queryset = Order.objects.all()
 ```
 
-### Testing with Authentication
+## Testing
 
-To test an endpoint that requires auth, you can force authentication like so:
+An `AuthenticationMixin` class has been created to make testing easier.
 
 ```python
 from rest_framework.test import APITestCase
+from zc_common.jwt_auth.tests import AuthenticationMixin
 
-
-class MyTestCase(ApiTestCase):
-  def force_authenticate(self):
-    from zc_common.jwt_auth.authentication import User
-    user = User(id=1, roles=['staff'])
-    self.client.force_authenticate(user=user)
-    
-  def test_auth_endpoint(self):
-    self.force_authenticate()
-    self.client.get('/my_endpoint')
-    # The view's `request.user` will be the above `User` instance
+class UserTests(APITestCase, AuthenticationMixin):
+    def setUp(self):
+      self.authorize_as('anonymous')
+      ...
 ```
+
+There are several options for `self.authorize_as`. Each option will attach a signed JWT to outgoing test client requests:
+* 'anonymous'
+* 'guest'
+* 'user'
+* 'staff'
+
+For 'guest', 'user', and 'staff', you may pass an additional parameter to specify the ID of the user: `self.authorize_as('staff', user_id=123)`
+
+You may also test service requests: `self.authorize_as('service', service_name='Users')`
 
 ## Authorization Explanations
 
