@@ -43,7 +43,7 @@ class RemoteResourceField(ResourceRelatedField):
         if related_obj:
             if isinstance(related_obj, BaseManager):
                 list_of_ids = related_obj.values_list('pk', flat=True)
-                query_parameters = 'filter[id]={}'.format(','.join([str(pk) for pk in list_of_ids]))
+                query_parameters = 'filter[id__in]={}'.format(','.join([str(pk) for pk in list_of_ids]))
                 related_path = self.related_resource_path.format(pk=query_parameters)
             else:
                 related_path = self.related_resource_path.format(pk=related_obj.id)
