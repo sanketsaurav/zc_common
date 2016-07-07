@@ -9,6 +9,7 @@ from zc_common.remote_resource.models import RemoteResource
 
 
 class RemoteResourceField(ResourceRelatedField):
+
     def __init__(self, related_resource_path=None, **kwargs):
         if 'model' not in kwargs:
             kwargs['model'] = RemoteResource
@@ -39,13 +40,16 @@ class RemoteResourceField(ResourceRelatedField):
         # self.source is the field name; getattr(obj, self.source) returns the
         # RemoteResource object or RelatedManager in the case of a to-many relationship.
         related_obj = getattr(obj, self.source)
-        if isinstance(related_obj, BaseManager):
-            list_of_ids = related_obj.values_list('pk', flat=True)
-            query_parameters = 'filter[id]={}'.format(','.join([str(pk) for pk in list_of_ids]))
-            related_path = self.related_resource_path.format(pk=query_parameters)
+        if related_obj:
+            if isinstance(related_obj, BaseManager):
+                list_of_ids = related_obj.values_list('pk', flat=True)
+                query_parameters = 'filter[id]={}'.format(','.join([str(pk) for pk in list_of_ids]))
+                related_path = self.related_resource_path.format(pk=query_parameters)
+            else:
+                related_path = self.related_resource_path.format(pk=related_obj.id)
+            related_link = request.build_absolute_uri(related_path)
         else:
-            related_path = self.related_resource_path.format(pk=related_obj.id)
-        related_link = request.build_absolute_uri(related_path)
+            related_link = None
 
         if self_link:
             return_data.update({'self': self_link})
