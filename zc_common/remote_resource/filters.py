@@ -22,9 +22,10 @@ class JSONAPIFilterBackend(filters.DjangoFilterBackend):
                     extra = None
                 if name not in view.filter_fields.keys():
                     return queryset.none()
-                if 'id' in field_name:
+                if len(field_name) > 1 and field_name[:2] == 'id':
                     query_params['{0}__{1}'.format(primary_key, extra)] = value
-                if isinstance(getattr(queryset.model, field_name).field, ManyToManyField):
+                elif isinstance(getattr(queryset.model, field_name).field, ManyToManyField):
+                    # elif because getattr fails for the auto id field
                     value = value.split(',')
                 query_params[field_name] = value
 
