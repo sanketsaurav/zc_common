@@ -1,3 +1,4 @@
+from django.db.models import fields as model_fields
 from django.db.models import Model
 from django.db.models.manager import Manager
 from django.db.models.query import QuerySet
@@ -25,16 +26,29 @@ class ModelViewSet(viewsets.ModelViewSet):
     @property
     def filter_fields(self):
         queryset = self.get_queryset()
-        # TODO: replace deprecated get_all_field_names()
-        field_names = queryset.model._meta.get_all_field_names()
-        primary_key = queryset.model._meta.pk.name
-        fields = {}
+        return_fields = {}
 
-        for name in field_names:
-            fields[name] = ['exact']
-            if name == primary_key:
-                fields['id'] = ['in', 'exact']
-        return fields
+        fields = queryset.model._meta.get_fields()
+        for field in fields:
+            # For backwards compatibility GenericForeignKey should not be
+            # included in the results.
+            if field.is_relation and field.many_to_one and field.related_model is None:
+                continue
+            # Relations to child proxy models should not be included.
+            if (field.model != queryset.model._meta.model and
+                    field.model._meta.concrete_model == queryset.model._meta.concrete_model):
+                continue
+
+            name = field.attname if hasattr(field, 'attname') else field.name
+            field_type = type(field)
+            if hasattr(field, 'primary_key') and field.primary_key:
+                return_fields['id'] = ['in', 'exact']
+            elif field_type in (model_fields.TextField, model_fields.CharField):
+                return_fields[name] = ['icontains', 'exact']
+            else:
+                return_fields[name] = ['exact']
+
+        return return_fields
 
     def has_ids_query_params(self):
         return hasattr(self.request, 'query_params') and 'filter[id__in]' in self.request.query_params
