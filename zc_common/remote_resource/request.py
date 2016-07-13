@@ -114,7 +114,7 @@ def make_service_request(service_name, endpoint, method=GET, data=None):
     return response
 
 
-def wrap_resource(response):
+def wrap_resource_from_response(response):
     json_response = json.loads(response.text)
 
     if 'data' not in json_response:
@@ -131,6 +131,11 @@ def get_remote_resource(service_name, resource_type, pk):
     """A shortcut function to make a GET request to a remote service."""
     url = get_route_from_fk(resource_type, pk)
     response = make_service_request(service_name, url)
-    wrapped_resource = wrap_resource(response)
+    wrapped_resource = wrap_resource_from_response(response)
     return wrapped_resource
 
+
+def get_remote_resource_from_url(service_name, url):
+    response = make_service_request(service_name, url)
+    wrapped_resource = wrap_resource_from_response(response)
+    return wrapped_resource
