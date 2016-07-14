@@ -32,7 +32,6 @@ class ServiceRequestException(Exception):
         self.response = response
 
 
-
 class RemoteResourceException(Exception):
     pass
 
