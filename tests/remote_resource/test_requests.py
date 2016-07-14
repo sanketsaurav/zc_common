@@ -152,6 +152,35 @@ class WrappersTestCase(TestCase):
         self.assertEqual(resources[0].authors[0].type, 'People')
         self.assertEqual(resources[0].authors[0].id, '9')
 
+    def test_remote_resource_list_wrapper_multiple_relationship_links(self):
+        data = {
+            "data": [
+                {
+                    "type": "articles",
+                    "id": "1",
+                    "attributes": {
+                        "title": "Omakase"
+                    },
+                    "relationships": {
+                        "authors": {
+                            "links": {
+                                "self": "/articles/1/relationships/authors",
+                                "related": "/articles/1/authors"
+                            },
+                            "data": [
+                                {"type": "People", "id": "9"},
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+
+        resources = RemoteResourceListWrapper(data['data'])
+
+        self.assertEqual(resources[0].authors.links.self, '/articles/1/relationships/authors')
+        self.assertEqual(resources[0].authors.links.related, '/articles/1/authors')
+
 
 @mock.patch('zc_common.remote_resource.request.requests')
 @mock.patch('zc_common.remote_resource.request.zc_settings')
