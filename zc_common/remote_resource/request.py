@@ -43,11 +43,11 @@ class RemoteResourceWrapper(object):
         self.create_properties_from_data()
 
     def create_properties_from_data(self):
-        if 'id' in self.data:
-            setattr(self, 'id', self.data.get('id'))
+        accepted_keys = ('id', 'type', 'self', 'related')
 
-        if 'type' in self.data:
-            setattr(self, 'type', self.data.get('type'))
+        for key in self.data.keys():
+            if key in accepted_keys:
+                setattr(self, key, self.data.get(key))
 
         if 'attributes' in self.data:
             attributes = self.data['attributes']
@@ -62,6 +62,10 @@ class RemoteResourceWrapper(object):
                     setattr(self, underscore(key), RemoteResourceListWrapper(relationships[key]['data']))
                 else:
                     setattr(self, underscore(key), RemoteResourceWrapper(relationships[key]['data']))
+
+                if 'links' in relationships[key]:
+                    setattr(getattr(self, underscore(key)), 'links',
+                            RemoteResourceWrapper(relationships[key]['links']))
 
 
 class RemoteResourceListWrapper(list):
