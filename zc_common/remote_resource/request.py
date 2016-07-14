@@ -27,7 +27,7 @@ class ServiceRequestException(Exception):
     message = None
     response = None
 
-    def __init(self, message, response=None):
+    def __init__(self, message, response):
         self.message = message
         self.response = response
 
