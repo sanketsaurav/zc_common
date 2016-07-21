@@ -1,4 +1,4 @@
-from django.db.models import CharField
+from django.db.models import CharField, TextField
 from django.db.models import Model
 from django.db.models.manager import Manager
 from django.db.models.query import QuerySet
@@ -42,7 +42,7 @@ class ModelViewSet(viewsets.ModelViewSet):
             name = field.attname if hasattr(field, 'attname') else field.name
             if hasattr(field, 'primary_key') and field.primary_key:
                 return_fields['id'] = ['in', 'exact']
-            elif CharField in field.__class__.__mro__:
+            elif CharField in field.__class__.__mro__ or TextField in field.__class__.__mro__:
                 return_fields[name] = ['icontains', 'exact']
             else:
                 return_fields[name] = ['exact']
