@@ -4,9 +4,10 @@ from django.db import models
 
 
 class RemoteResource(object):
+
     def __init__(self, type_name, pk):
-        self.type = type_name
-        self.id = pk
+        self.type = str(type_name)
+        self.id = str(pk)
 
 
 class RemoteForeignKey(models.CharField):
