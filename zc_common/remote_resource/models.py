@@ -6,8 +6,9 @@ from django.db import models
 class RemoteResource(object):
 
     def __init__(self, type_name, pk):
-        self.type = str(type_name)
-        self.id = str(pk)
+
+        self.type = str(type_name) if type_name else None
+        self.id = str(pk) if pk else None
 
 
 class RemoteForeignKey(models.CharField):
