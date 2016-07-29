@@ -40,7 +40,7 @@ class RemoteResourceField(ResourceRelatedField):
         # self.source is the field name; getattr(obj, self.source) returns the
         # RemoteResource object or RelatedManager in the case of a to-many relationship.
         related_obj = getattr(obj, self.source)
-        if related_obj:
+        if related_obj and related_obj.id:
             if isinstance(related_obj, BaseManager):
                 list_of_ids = related_obj.values_list('pk', flat=True)
                 query_parameters = 'filter[id__in]={}'.format(','.join([str(pk) for pk in list_of_ids]))
