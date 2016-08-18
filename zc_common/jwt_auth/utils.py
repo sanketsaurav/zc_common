@@ -3,6 +3,12 @@ from django.utils import encoding
 from rest_framework_jwt.settings import api_settings
 
 
+USER_ROLE = 'user'
+STAFF_ROLE = 'staff'
+SERVICE_ROLE = 'service'
+ANONYMOUS_ROLE = 'anonymous'
+
+
 def jwt_payload_handler(user):
     """Constructs a payload for a user JWT.
     This is a slimmed down version of the handler in
