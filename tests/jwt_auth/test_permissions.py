@@ -34,11 +34,11 @@ class IsStaffTestCase(PermissionTestMixin, TestCase):
         self.permission_class = IsStaff()
 
     def test_missing_user_role__fail(self):
-        user = User(roles=[USER_ROLE])
+        user = User(roles=[STAFF_ROLE])
         self.has_permission(user, False)
 
     def test_missing_staff_role__fail(self):
-        user = User(roles=[STAFF_ROLE])
+        user = User(roles=[USER_ROLE])
         self.has_permission(user, False)
 
     def test_user_and_staff_roles__pass(self):
@@ -60,7 +60,7 @@ class IsOwnerTestCase(PermissionTestMixin, TestCase):
         self.assertEqual(self.permission_class.has_object_permission(self.request, None, obj), obj_perm_result)
 
     def test_missing_user_role__fail(self):
-        user = User(roles=[SERVICE_ROLE, STAFF_ROLE, ANONYMOUS_ROLE], id='1')
+        user = User(roles=[STAFF_ROLE], id='1')
         resource = type('Resource', (object, ), {'user': '1'})
         self.has_object_permission(user, resource, False, True)
 
@@ -81,7 +81,7 @@ class IsServiceTestCase(PermissionTestMixin, TestCase):
         self.permission_class = IsService()
 
     def test_missing_service_role__fail(self):
-        user = User(roles=[USER_ROLE, STAFF_ROLE, ANONYMOUS_ROLE])
+        user = User(roles=[USER_ROLE, STAFF_ROLE])
         self.has_permission(user, False)
 
     def test_service_role__pass(self):
