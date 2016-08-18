@@ -127,4 +127,3 @@ class IsStaffOrServiceTestCase(PermissionTestMixin, TestCase):
     def test_service_role__pass(self):
         user = User(roles=[SERVICE_ROLE])
         self.has_permission(user, True)
-
