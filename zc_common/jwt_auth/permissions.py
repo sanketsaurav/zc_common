@@ -5,7 +5,7 @@ from .utils import USER_ROLE, STAFF_ROLE, SERVICE_ROLE, ANONYMOUS_ROLE
 class IsUser(BasePermission):
     def has_permission(self, request, view):
         user = request.user
-        return request.user and request.user.is_authenticated() and USER_ROLE in user.roles
+        return user and user.is_authenticated() and USER_ROLE in user.roles
 
 
 class IsStaff(IsUser):
@@ -24,15 +24,17 @@ class IsOwner(IsUser):
 class IsAnonymous(BasePermission):
     def has_permission(self, request, view):
         user = request.user
-        return request.user and request.user.is_authenticated() and ANONYMOUS_ROLE in user.roles
+        return user and user.is_authenticated() and ANONYMOUS_ROLE in user.roles
 
 
 class IsService(BasePermission):
     def has_permission(self, request, view):
         user = request.user
-        return request.user and request.user.is_authenticated() and SERVICE_ROLE in user.roles
+        return user and user.is_authenticated() and SERVICE_ROLE in user.roles
 
 
-class IsStaffOrService(IsStaff, IsService):
+class IsStaffOrService(BasePermission):
     def has_permission(self, request, view):
-        return IsStaff.has_permission(self, request, view) or IsService.has_permission(self, request, view)
+        user = request.user
+        return user and user.is_authenticated() and (
+            (USER_ROLE in user.roles and STAFF_ROLE in user.roles) or SERVICE_ROLE in user.roles)

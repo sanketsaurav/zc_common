@@ -34,7 +34,7 @@ def service_jwt_payload_handler(service_name):
     """
     payload = {
         'serviceName': service_name,
-        'roles': ['service']
+        'roles': [SERVICE_ROLE]
     }
 
     return payload
