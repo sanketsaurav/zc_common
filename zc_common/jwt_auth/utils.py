@@ -1,12 +1,7 @@
 import jwt
 from django.utils import encoding
 from rest_framework_jwt.settings import api_settings
-
-
-USER_ROLE = 'user'
-STAFF_ROLE = 'staff'
-SERVICE_ROLE = 'service'
-ANONYMOUS_ROLE = 'anonymous'
+from permissions import SERVICE_ROLES
 
 
 def jwt_payload_handler(user):
@@ -34,7 +29,7 @@ def service_jwt_payload_handler(service_name):
     """
     payload = {
         'serviceName': service_name,
-        'roles': [SERVICE_ROLE]
+        'roles': SERVICE_ROLES
     }
 
     return payload

@@ -1,40 +1,60 @@
-from rest_framework.permissions import BasePermission
-from .utils import USER_ROLE, STAFF_ROLE, SERVICE_ROLE, ANONYMOUS_ROLE
+from rest_framework import permissions
+
+USER_ACTOR = 'user'
+STAFF_ACTOR = 'staff'
+SERVICE_ACTOR = 'service'
+ANONYMOUS_ACTOR = 'anonymous'
+
+USER_ROLES = [USER_ACTOR]
+STAFF_ROLES = [USER_ACTOR, STAFF_ACTOR]
+SERVICE_ROLES = [SERVICE_ACTOR]
+ANONYMOUS_ROLES = [ANONYMOUS_ACTOR]
 
 
-class IsUser(BasePermission):
+def is_staff(request):
+    return USER_ACTOR in request.user.roles and STAFF_ACTOR in request.user.roles
+
+
+def is_user(request):
+    return USER_ACTOR in request.user.roles
+
+
+def is_service(request):
+    return SERVICE_ACTOR in request.user.roles
+
+
+def is_anonymous(request):
+    return ANONYMOUS_ACTOR in request.user.roles
+
+
+class BasePermission(permissions.BasePermission):
     def has_permission(self, request, view):
-        user = request.user
-        return user and user.is_authenticated() and USER_ROLE in user.roles
+        if request.method in permissions.SAFE_METHODS:
+            return self.has_read_permission(request, view)
 
+        if request.method == 'DELETE':
+            return self.has_delete_permission(request, view)
 
-class IsStaff(IsUser):
-    def has_permission(self, request, view):
-        user = request.user
-        return super(IsStaff, self).has_permission(request, view) and STAFF_ROLE in user.roles
+        if request.method in ['POST', 'PUT', 'PATCH']:
+            return self.has_write_permission(request, view)
 
+        return False
 
-class IsOwner(IsUser):
-    def has_object_permission(self, request, view, obj):
-        if not obj.user:
-            return False
-        return str(request.user.id) == str(obj.user)
+    def has_read_permission(self, request, view):
+        return False
 
+    def has_delete_permission(self, request, view):
+        return False
 
-class IsAnonymous(BasePermission):
-    def has_permission(self, request, view):
-        user = request.user
-        return user and user.is_authenticated() and ANONYMOUS_ROLE in user.roles
+    def has_write_permission(self, request, view):
+        if request.method == 'POST':
+            return self.has_create_permission(request, view)
 
+        if request.method == 'PUT' or request.method == 'PATCH':
+            return self.has_update_permission(request, view)
 
-class IsService(BasePermission):
-    def has_permission(self, request, view):
-        user = request.user
-        return user and user.is_authenticated() and SERVICE_ROLE in user.roles
+    def has_create_permission(self, request, view):
+        return False
 
-
-class IsStaffOrService(BasePermission):
-    def has_permission(self, request, view):
-        user = request.user
-        return user and user.is_authenticated() and (
-            (USER_ROLE in user.roles and STAFF_ROLE in user.roles) or SERVICE_ROLE in user.roles)
+    def has_update_permission(self, request, view):
+        return False

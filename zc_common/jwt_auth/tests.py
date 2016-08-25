@@ -1,5 +1,6 @@
 import re
 from importlib import import_module
+from mock import Mock
 
 from django.contrib.admindocs.views import extract_views_from_urlpatterns, simplify_regex
 from django.conf import settings
@@ -96,3 +97,18 @@ class AuthenticationMixin:
         else:
             token = method(kwargs.get('user_id', 1))
         self.client.credentials(HTTP_AUTHORIZATION=token)
+
+
+class PermissionTestMixin(object):
+    def setUp(self):
+        self.user = type('User', (Mock,), {'roles': []})
+        self.request = type('Request', (Mock,), {'user': self.user})
+        self.view = type('View', (Mock,), {})
+
+        # Create an instance of the Permission class in child class
+        self.permission_obj = None
+
+    def assert_has_permission(self, action, expected):
+        method = getattr(self.permission_obj, 'has_{}_permission'.format(action))
+        has_perm = method(self.request, self.view)
+        self.assertEqual(has_perm, expected)
