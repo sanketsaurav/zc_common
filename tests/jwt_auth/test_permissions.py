@@ -2,8 +2,8 @@ from unittest import TestCase
 from mock import Mock
 
 from zc_common.jwt_auth.authentication import User
-from zc_common.jwt_auth.permissions import (is_staff, is_service, is_user, is_anonymous,
-                                            USER_ROLES, STAFF_ROLES, ANONYMOUS_ROLES, SERVICE_ROLES)
+from zc_common.jwt_auth import permissions
+from zc_common.jwt_auth.tests import PermissionTestMixin
 
 
 class TestMixin(object):
@@ -17,81 +17,104 @@ class TestMixin(object):
         self.assertEqual(has_perm, expected)
 
 
-class TestIsUser(TestMixin, TestCase):
+class IsUserTestCase(TestMixin, TestCase):
     def setUp(self):
-        super(TestIsUser, self).setUp()
-        self.callable = is_user
+        super(IsUserTestCase, self).setUp()
+        self.callable = permissions.is_user
 
     def test_user_role__pass(self):
-        self.user.roles = USER_ROLES
+        self.user.roles = permissions.USER_ROLES
         self.assert_has_permission(True)
 
-        self.user.roles = STAFF_ROLES
+        self.user.roles = permissions.STAFF_ROLES
         self.assert_has_permission(True)
 
     def test_user_role__fail(self):
-        self.user.roles = SERVICE_ROLES
+        self.user.roles = permissions.SERVICE_ROLES
         self.assert_has_permission(False)
 
-        self.user.roles = ANONYMOUS_ROLES
+        self.user.roles = permissions.ANONYMOUS_ROLES
         self.assert_has_permission(False)
 
 
-class TestIsStaff(TestMixin, TestCase):
+class IsStaffTestCase(TestMixin, TestCase):
     def setUp(self):
-        super(TestIsStaff, self).setUp()
-        self.callable = is_staff
+        super(IsStaffTestCase, self).setUp()
+        self.callable = permissions.is_staff
 
     def test_staff_roles__pass(self):
-        self.user.roles = STAFF_ROLES
+        self.user.roles = permissions.STAFF_ROLES
         self.assert_has_permission(True)
 
     def test_staff_roles__fail(self):
-        self.user.roles = SERVICE_ROLES
+        self.user.roles = permissions.SERVICE_ROLES
         self.assert_has_permission(False)
 
-        self.user.roles = ANONYMOUS_ROLES
+        self.user.roles = permissions.ANONYMOUS_ROLES
         self.assert_has_permission(False)
 
-        self.user.roles = USER_ROLES
+        self.user.roles = permissions.USER_ROLES
         self.assert_has_permission(False)
 
 
-class TestIsService(TestMixin, TestCase):
+class IsServiceTestCase(TestMixin, TestCase):
     def setUp(self):
-        super(TestIsService, self).setUp()
-        self.callable = is_service
+        super(IsServiceTestCase, self).setUp()
+        self.callable = permissions.is_service
 
     def test_service_role__pass(self):
-        self.user.roles = SERVICE_ROLES
+        self.user.roles = permissions.SERVICE_ROLES
         self.assert_has_permission(True)
 
     def test_service_role__fail(self):
-        self.user.roles = STAFF_ROLES
+        self.user.roles = permissions.STAFF_ROLES
         self.assert_has_permission(False)
 
-        self.user.roles = ANONYMOUS_ROLES
+        self.user.roles = permissions.ANONYMOUS_ROLES
         self.assert_has_permission(False)
 
-        self.user.roles = USER_ROLES
+        self.user.roles = permissions.USER_ROLES
         self.assert_has_permission(False)
 
 
-class TestIsAnonymous(TestMixin, TestCase):
+class IsAnonymousTestCase(TestMixin, TestCase):
     def setUp(self):
-        super(TestIsAnonymous, self).setUp()
-        self.callable = is_anonymous
+        super(IsAnonymousTestCase, self).setUp()
+        self.callable = permissions.is_anonymous
 
     def test_anonymous_role__pass(self):
-        self.user.roles = ANONYMOUS_ROLES
+        self.user.roles = permissions.ANONYMOUS_ROLES
         self.assert_has_permission(True)
 
     def test_anonymous_role__fail(self):
-        self.user.roles = STAFF_ROLES
+        self.user.roles = permissions.STAFF_ROLES
         self.assert_has_permission(False)
 
-        self.user.roles = SERVICE_ROLES
+        self.user.roles = permissions.SERVICE_ROLES
         self.assert_has_permission(False)
 
-        self.user.roles = USER_ROLES
+        self.user.roles = permissions.USER_ROLES
         self.assert_has_permission(False)
+
+
+class EventViewPermissionTestCase(PermissionTestMixin, TestCase):
+    def setUp(self):
+        super(EventViewPermissionTestCase, self).setUp()
+        self.permission_obj = permissions.EventViewPermission()
+
+    def test_create_permission__pass(self):
+        self.request.method = 'POST'
+        self.user.roles = permissions.SERVICE_ROLES
+        self.assert_has_permission('create', True)
+
+    def test_create_permission__fail(self):
+        self.request.method = 'POST'
+
+        self.user.roles = permissions.STAFF_ROLES
+        self.assert_has_permission('create', False)
+
+        self.user.roles = permissions.USER_ROLES
+        self.assert_has_permission('create', False)
+
+        self.user.roles = permissions.ANONYMOUS_ROLES
+        self.assert_has_permission('create', False)

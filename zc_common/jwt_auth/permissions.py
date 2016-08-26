@@ -58,3 +58,8 @@ class BasePermission(permissions.BasePermission):
 
     def has_update_permission(self, request, view):
         return False
+
+
+class EventViewPermission(BasePermission):
+    def has_create_permission(self, request, view):
+        return is_service(request)
