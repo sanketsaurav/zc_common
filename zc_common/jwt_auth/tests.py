@@ -101,14 +101,23 @@ class AuthenticationMixin:
 
 class PermissionTestMixin(object):
     def setUp(self):
-        self.user = type('User', (Mock,), {'roles': []})
+        self.user = type('User', (Mock,), {'roles': [], 'id': 1})
         self.request = type('Request', (Mock,), {'user': self.user})
         self.view = type('View', (Mock,), {})
+        self.obj = None
 
         # Create an instance of the Permission class in child class
         self.permission_obj = None
 
-    def assert_has_permission(self, action, expected):
-        method = getattr(self.permission_obj, 'has_{}_permission'.format(action))
-        has_perm = method(self.request, self.view)
+    def assert_has_permission(self, expected):
+        has_perm = self.permission_obj.has_permission(self.request, self.view)
+        self.assertEqual(has_perm, expected)
+
+    def assert_has_object_permission(self, expected):
+        has_perm = self.permission_obj.has_object_permission(self.request, self.view, self.obj)
+        self.assertEqual(has_perm, expected)
+
+    def assert_permission(self, expected):
+        has_perm = (self.permission_obj.has_permission(self.request, self.view) and
+                    self.permission_obj.has_object_permission(self.request, self.view, self.obj))
         self.assertEqual(has_perm, expected)

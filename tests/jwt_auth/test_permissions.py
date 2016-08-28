@@ -105,16 +105,16 @@ class EventViewPermissionTestCase(PermissionTestMixin, TestCase):
     def test_create_permission__pass(self):
         self.request.method = 'POST'
         self.user.roles = permissions.SERVICE_ROLES
-        self.assert_has_permission('create', True)
+        self.assert_has_permission(True)
 
     def test_create_permission__fail(self):
         self.request.method = 'POST'
 
         self.user.roles = permissions.STAFF_ROLES
-        self.assert_has_permission('create', False)
+        self.assert_has_permission(False)
 
         self.user.roles = permissions.USER_ROLES
-        self.assert_has_permission('create', False)
+        self.assert_has_permission(False)
 
         self.user.roles = permissions.ANONYMOUS_ROLES
-        self.assert_has_permission('create', False)
+        self.assert_has_permission(False)
