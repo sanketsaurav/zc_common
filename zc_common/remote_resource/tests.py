@@ -138,7 +138,8 @@ class ResponseTestCase(APITestCase):
                     self.assertRegexpMatches(links['self'], r'^https?://.*/{}/{}/relationships/{}'.format(
                         self.resource_name, resource_pk, underscore(relationship_name)))
 
-                    if hasattr(self, 'remote_relationship_keys') and relationship_name in self.remote_relationship_keys:
+                    if hasattr(self, 'remote_relationship_keys') \
+                            and relationship_name in self.remote_relationship_keys:
                         self.assertRegexpMatches(links['related'], r'^https?://.*/{}/\w'.format(
                             pluralize(underscore(self.get_remote_relationship_name(relationship_name)))))
                     else:

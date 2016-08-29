@@ -18,7 +18,8 @@ class User(object):
             setattr(self, kwarg, kwargs[kwarg])
 
     def is_authenticated(self):
-        return 'user' in self.roles or 'service' in self.roles
+        # Roles (i.e. anonymous, user, etc) are handled by permissions classes
+        return True
 
     def get_roles(self):
         """

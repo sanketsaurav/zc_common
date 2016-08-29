@@ -4,7 +4,7 @@ import os
 
 DEFAULTS = {
     'GATEWAY_ROOT_PATH': getattr(
-        settings, 'GATEWAY_ROOT_PATH', os.environ.get('GATEWAY_ROOT_PATH', 'https://mp-gateway.herokuapp.com/'))
+        settings, 'GATEWAY_ROOT_PATH', os.environ.get('GATEWAY_ROOT_PATH', 'http://gateway:3000/'))
 }
 
 zc_settings = APISettings(None, DEFAULTS, None)
