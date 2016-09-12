@@ -70,6 +70,33 @@ class ShippingCompany(models.Model):
     pickup_address = RemoteForeignKey('Address', db_column='pickup_address_id')
 ```
 
+## GenericRemoteForeignKey (models)
+
+This class provides support for generic remote relations. It is based on Django's GenericForeignKey, documented [here](https://docs.djangoproject.com/en/1.10/ref/contrib/contenttypes/#generic-relations).
+
+Example model:
+```python
+class CartItem(models.Model):
+  resource_type = models.CharField()
+  resource_id = models.CharField()
+  item = GenericRemoteForeignKey('resource_type', 'resource_id')
+```
+
+In this example, `item` is not a field, but an accessor to the remote object via the `resource_type` and `resource_id` fields. Let's look at how this might be used.
+
+```python
+ci = CartItem()
+
+item = RemoteResource(type='CustomMenu', id='abc1234')
+ci.item = item
+# ci.resource_type = 'CustomMenu'
+# ci.resource_id = 'abc1234'
+ci.save()
+
+ci.item
+# <RemoteResource: 'CustomMenu' 'abc1234'>
+```
+
 ## RelationshipView (views)
 
 To handle the relationship view for each resource we have created a view to facilitate the extra handling needed to work properly with remote relationships. This view is a complete drop in for the JSON API package's RelationshipView, so all you need to do is import it from `zc_common.remote_resource.views` to have a relationship view that handles remote resources and there should be no extra work required aside from setting the queryset.
