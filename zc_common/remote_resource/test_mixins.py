@@ -465,7 +465,7 @@ class ResourceNoDeleteTestCase(object):
         self.failure_response_structure_test(response, status.HTTP_403_FORBIDDEN)
 
     def test_delete__for_nonexistant_resource(self):
-        url = reverse(self.resource_view_name, args=(self.resource.id + 10000,))
+        url = reverse(self.resource_view_name, args=(9999,))
         response = self.client_delete_auth(url, user_role=self.USER_ROLE)
 
         self.failure_response_structure_test(response, status.HTTP_403_FORBIDDEN)
@@ -490,7 +490,7 @@ class ResourceDeleteWithoutPermissionTestCase(ResourceNoDeleteTestCase):
 class ResourceDeleteLimitedTestCase(ResourceNoDeleteTestCase):
 
     def test_delete__for_nonexistant_resource(self):
-        url = reverse(self.resource_view_name, args=(self.resource.id + 10000,))
+        url = reverse(self.resource_view_name, args=(9999,))
         response = self.client_delete_auth(url, user_role=self.USER_ROLE)
 
         self.failure_response_structure_test(response, status.HTTP_404_NOT_FOUND)
