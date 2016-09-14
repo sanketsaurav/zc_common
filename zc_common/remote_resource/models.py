@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.db.models import signals
 
 
 class RemoteResource(object):
@@ -62,9 +63,26 @@ class GenericRemoteForeignKey(object):
     Django ForeignKeys) by adding itself as a model attribute.
     """
 
+    # Field flags
+    auto_created = False
+    concrete = False
+    editable = False
+    hidden = False
+
+    is_relation = True
+    many_to_many = False
+    many_to_one = True
+    one_to_many = False
+    one_to_one = False
+    related_model = None
+    remote_field = None
+
     def __init__(self, rt_field='resource_type', id_field='resource_id'):
         self.rt_field = rt_field
         self.id_field = id_field
+        self.editable = False
+        self.rel = None
+        self.column = None
 
     def contribute_to_class(self, cls, name, **kwargs):
         self.name = name
@@ -72,10 +90,32 @@ class GenericRemoteForeignKey(object):
         self.cache_attr = "_%s_cache" % name
         cls._meta.add_field(self, virtual=True)
 
+        # Only run pre-initialization field assignment on non-abstract models
+        if not cls._meta.abstract:
+            signals.pre_init.connect(self.instance_pre_init, sender=cls)
+
         setattr(cls, name, self)
 
     def is_cached(self, instance):
         return hasattr(instance, self.cache_attr)
+
+    def instance_pre_init(self, signal, sender, args, kwargs, **_kwargs):
+        """
+        Handle initializing an object with the generic FK instead of
+        content_type and object_id fields.
+        """
+        if self.name in kwargs:
+            value = kwargs.pop(self.name)
+            if value is not None:
+                if not isinstance(value, RemoteResource):
+                    raise ValueError(
+                        'GenericRemoteForeignKey only accepts RemoteResource objects as values'
+                    )
+                kwargs[self.rt_field] = value.type
+                kwargs[self.id_field] = value.id
+            else:
+                kwargs[self.rt_field] = None
+                kwargs[self.id_field] = None
 
     def __get__(self, instance, instance_type=None):
         if instance is None:
@@ -95,7 +135,7 @@ class GenericRemoteForeignKey(object):
         pk = None
         if value is not None:
             if not isinstance(value, RemoteResource):
-                raise Exception(
+                raise ValueError(
                     'GenericRemoteForeignKey only accepts RemoteResource objects as values'
                 )
             rt = value.type
