@@ -1,4 +1,6 @@
 import json
+import urllib
+
 import requests
 from inflection import underscore
 from uritemplate import expand
@@ -39,11 +41,18 @@ class RemoteResourceException(Exception):
 
 class RemoteResourceWrapper(object):
 
-    def __init__(self, data):
-        self.data = data
-        self.create_properties_from_data()
+    def __init__(self, data, included=None):
+        result = self._get_from_include(included, data)
+        self.data = result if result else data
+        self.create_properties_from_data(included)
 
-    def create_properties_from_data(self):
+    def _get_from_include(self, included, obj):
+        if included:
+            results = filter(lambda x: x['type'] == obj['type'] and x['id'] == obj['id'], included)
+            return results[0] if results else None
+        return None
+
+    def create_properties_from_data(self, included):
         accepted_keys = ('id', 'type', 'self', 'related')
 
         for key in self.data.keys():
@@ -60,24 +69,31 @@ class RemoteResourceWrapper(object):
 
             for key in relationships.keys():
                 if isinstance(relationships[key]['data'], list):
-                    setattr(self, underscore(key), RemoteResourceListWrapper(relationships[key]['data']))
+                    setattr(self, underscore(key), RemoteResourceListWrapper(relationships[key]['data'], included))
                 else:
-                    setattr(self, underscore(key), RemoteResourceWrapper(relationships[key]['data']))
+                    got = None
+                    if included:
+                        got = self._get_from_include(included, relationships[key]['data'])
+
+                    if got:
+                        setattr(self, underscore(key), RemoteResourceWrapper(got, included))
+                    else:
+                        setattr(self, underscore(key), RemoteResourceWrapper(relationships[key]['data'], included))
 
                 if 'links' in relationships[key]:
                     setattr(getattr(self, underscore(key)), 'links',
-                            RemoteResourceWrapper(relationships[key]['links']))
+                            RemoteResourceWrapper(relationships[key]['links'], None))
 
 
 class RemoteResourceListWrapper(list):
 
-    def __init__(self, seq):
+    def __init__(self, seq, included=None):
         super(RemoteResourceListWrapper, self).__init__()
         self.data = seq
-        self.add_items_from_data()
+        self.add_items_from_data(included)
 
-    def add_items_from_data(self):
-        map(lambda x: self.append(RemoteResourceWrapper(x)), self.data)
+    def add_items_from_data(self, included):
+        map(lambda x: self.append(RemoteResourceWrapper(x, included)), self.data)
 
 
 def get_route_from_fk(resource_type, pk=None):
@@ -133,14 +149,18 @@ def wrap_resource_from_response(response):
         raise RemoteResourceException(msg)
 
     resource_data = json_response['data']
+    included_data = json_response.get('included')
     if isinstance(resource_data, list):
-        return RemoteResourceListWrapper(resource_data)
-    return RemoteResourceWrapper(resource_data)
+        return RemoteResourceListWrapper(resource_data, included_data)
+    return RemoteResourceWrapper(resource_data, included_data)
 
 
-def get_remote_resource(service_name, resource_type, pk):
+def get_remote_resource(service_name, resource_type, pk, include=None):
     """A shortcut function to make a GET request to a remote service."""
     url = get_route_from_fk(resource_type, pk)
+    if include:
+        url = '{}?{}'.format(url, urllib.urlencode({'include': include}))
+
     response = make_service_request(service_name, url)
     wrapped_resource = wrap_resource_from_response(response)
     return wrapped_resource
