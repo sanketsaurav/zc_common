@@ -56,6 +56,15 @@ class ResponseTestCase(APITestCase):
                 if value.endswith('+00:00'):
                     value = value[:-6] + 'Z'
                 self.assertEqual(instance_attributes[camelize(key, False)], value)
+
+            elif isinstance(instance_attribute, datetime.date):
+                value = instance_attribute.isoformat()
+                self.assertEqual(instance_attributes[camelize(key, False)], value)
+
+            elif isinstance(instance_attribute, datetime.time):
+                value = instance_attribute.isoformat()
+                self.assertEqual(instance_attributes[camelize(key, False)], value)
+
             else:
                 self.assertEqual(
                     instance_attributes[camelize(key, False)], instance_attribute)
