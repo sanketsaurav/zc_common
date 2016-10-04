@@ -143,10 +143,24 @@ class ResponseTestCase(APITestCase):
                     self.assertTrue(
                         all(key in relationship for key in ['data', 'links']))
 
-                    if relationship['data']:
-                        for relationship_data in self.convert_to_list(relationship['data']):
-                            self.assertTrue(
-                                all(key in relationship_data for key in ['type', 'id']))
+                    for relationship_data in self.convert_to_list(relationship['data']):
+                        self.assertTrue(
+                            all(key in relationship_data for key in ['type', 'id']))
+
+                    links = relationship['links']
+
+                    resource_pk = self.resource.pk if hasattr(self, 'resource') else '[0-9A-Za-z]*'
+
+                    self.assertRegexpMatches(links['self'], r'^https?://.*/{}/{}/relationships/{}'.format(
+                        self.resource_name, resource_pk, underscore(relationship_name)))
+
+                    if hasattr(self, 'remote_relationship_keys') \
+                            and relationship_name in self.remote_relationship_keys:
+                        self.assertRegexpMatches(links['related'], r'^https?://.*/{}/\w'.format(
+                            pluralize(underscore(self.get_remote_relationship_name(relationship_name)))))
+                    else:
+                        self.assertRegexpMatches(links['related'], r'^https?://.*/{}/{}/{}'.format(
+                            self.resource_name, resource_pk, underscore(relationship_name)))
 
     def get_remote_relationship_name(self, relationship_name):
         """
