@@ -190,6 +190,13 @@ class ResourceUpdateTestCase(object):
         db_value = getattr(db_obj, attribute_name)
         if isinstance(db_value, datetime.datetime):
             new_attribute_value = dateutil.parser.parse(new_attribute_value)
+
+        elif isinstance(db_value, datetime.date):
+            new_attribute_value = new_attribute_value.isoformat()
+
+        elif isinstance(db_value, datetime.time):
+            new_attribute_value = new_attribute_value.isoformat()
+
         self.assertEqual(db_value, new_attribute_value)
 
     def test_update__incorrect_type(self):
