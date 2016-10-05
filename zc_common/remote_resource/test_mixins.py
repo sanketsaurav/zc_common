@@ -1,5 +1,7 @@
 import json
 
+import datetime
+import dateutil.parser
 from inflection import camelize
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -185,7 +187,17 @@ class ResourceUpdateTestCase(object):
                                            relationship_keys=self.relationship_keys)
 
         db_obj = self.resource_class.objects.get(id=self.resource.id)
-        self.assertEqual(getattr(db_obj, attribute_name), new_attribute_value)
+        db_value = getattr(db_obj, attribute_name)
+        if isinstance(db_value, datetime.datetime):
+            new_attribute_value = dateutil.parser.parse(new_attribute_value)
+
+        elif isinstance(db_value, datetime.date):
+            new_attribute_value = new_attribute_value.isoformat()
+
+        elif isinstance(db_value, datetime.time):
+            new_attribute_value = new_attribute_value.isoformat()
+
+        self.assertEqual(db_value, new_attribute_value)
 
     def test_update__incorrect_type(self):
         attribute_name = self.attributes[0]
@@ -200,7 +212,7 @@ class ResourceUpdateTestCase(object):
         self.failure_response_structure_test(response, status.HTTP_409_CONFLICT)
 
     def test_update__multiple_fields(self):
-        if len(self.attributes) < 2:
+        if len(self.new_attribute_values) < 2:
             return True
 
         attribute_name_1 = self.attributes[0]
@@ -299,7 +311,7 @@ class ResourceUpdateLimitedPermissionTestCase(object):
         self.failure_response_structure_test(response, status.HTTP_403_FORBIDDEN)
 
     def test_update__multiple_fields(self):
-        if len(self.attributes) < 2:
+        if len(self.new_attribute_values) < 2:
             return True
 
         attribute_name_1 = self.attributes[0]
@@ -386,7 +398,7 @@ class ResourceFlaggedDeleteTestCase(object):
         self.assertIsNotNone(deleted_resource[0].deleted_at)
 
     def test_delete__404_for_nonexistant_resource(self):
-        url = reverse(self.resource_view_name, args=(self.resource.id + 10000,))
+        url = reverse(self.resource_view_name, args=(9999,))
         response = self.client_delete_auth(url, user_role=self.USER_ROLE)
 
         self.failure_response_structure_test(response, status.HTTP_404_NOT_FOUND)
@@ -427,7 +439,7 @@ class ResourceDeleteTestCase(object):
         self.assertEqual(deleted_resource.count(), 0)
 
     def test_delete__404_for_nonexistant_resource(self):
-        url = reverse(self.resource_view_name, args=(self.resource.id + 10000,))
+        url = reverse(self.resource_view_name, args=(9999,))
         response = self.client_delete_auth(url, user_role=STAFF)
 
         self.failure_response_structure_test(response, status.HTTP_404_NOT_FOUND)
@@ -465,7 +477,7 @@ class ResourceNoDeleteTestCase(object):
         self.failure_response_structure_test(response, status.HTTP_403_FORBIDDEN)
 
     def test_delete__for_nonexistant_resource(self):
-        url = reverse(self.resource_view_name, args=(self.resource.id + 10000,))
+        url = reverse(self.resource_view_name, args=(9999,))
         response = self.client_delete_auth(url, user_role=self.USER_ROLE)
 
         self.failure_response_structure_test(response, status.HTTP_403_FORBIDDEN)
@@ -490,7 +502,7 @@ class ResourceDeleteWithoutPermissionTestCase(ResourceNoDeleteTestCase):
 class ResourceDeleteLimitedTestCase(ResourceNoDeleteTestCase):
 
     def test_delete__for_nonexistant_resource(self):
-        url = reverse(self.resource_view_name, args=(self.resource.id + 10000,))
+        url = reverse(self.resource_view_name, args=(9999,))
         response = self.client_delete_auth(url, user_role=self.USER_ROLE)
 
         self.failure_response_structure_test(response, status.HTTP_404_NOT_FOUND)

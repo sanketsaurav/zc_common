@@ -1,5 +1,6 @@
 import json
 
+import datetime
 from inflection import camelize, underscore, pluralize
 from rest_framework.test import APITestCase
 
@@ -50,8 +51,23 @@ class ResponseTestCase(APITestCase):
             if hasattr(instance_attribute, '__call__'):
                 instance_attribute = instance_attribute()
 
-            self.assertEqual(
-                instance_attributes[camelize(key, False)], instance_attribute)
+            if isinstance(instance_attribute, datetime.datetime):
+                value = instance_attribute.isoformat()
+                if value.endswith('+00:00'):
+                    value = value[:-6] + 'Z'
+                self.assertEqual(instance_attributes[camelize(key, False)], value)
+
+            elif isinstance(instance_attribute, datetime.date):
+                value = instance_attribute.isoformat()
+                self.assertEqual(instance_attributes[camelize(key, False)], value)
+
+            elif isinstance(instance_attribute, datetime.time):
+                value = instance_attribute.isoformat()
+                self.assertEqual(instance_attributes[camelize(key, False)], value)
+
+            else:
+                self.assertEqual(
+                    instance_attributes[camelize(key, False)], instance_attribute)
 
         if not relationship_keys:
             return True
