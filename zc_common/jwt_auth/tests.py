@@ -1,8 +1,11 @@
 import re
 from importlib import import_module
+from unittest import TestCase
+
 from mock import Mock
 
 from django.contrib.admindocs.views import extract_views_from_urlpatterns, simplify_regex
+from django.core.urlresolvers import resolve
 from django.conf import settings
 
 from .authentication import User
@@ -100,24 +103,51 @@ class AuthenticationMixin:
 
 
 class PermissionTestMixin(object):
-    def setUp(self):
-        self.user = type('User', (Mock,), {'roles': [], 'id': 1})
-        self.request = type('Request', (Mock,), {'user': self.user})
-        self.view = type('View', (Mock,), {})
-        self.obj = None
+    """
+    This class attempt to make a distinction on using permission classes and their actual implementation.
+    The goal is to be able to test permissions in similar way that DRF uses permission classes. Here is an example use:
 
-        # Create an instance of the Permission class in child class
-        self.permission_obj = None
+    class UserPermissionTest(PermissionTestMixin, TestCase):
+        permission_class_instance = UserPermission()
+        PERMISSION_MAPPINGS = [
+            {
+                'url': '/url',
+                'method': 'POST',
+                'roles': ['user', 'staff'],
+                'expected': False,
+                'user_id': 10,    # This is optional.
+                'instance': User.objects.first()  # This is optional.
+            }
+        ]
 
-    def assert_has_permission(self, expected):
-        has_perm = self.permission_obj.has_permission(self.request, self.view)
-        self.assertEqual(has_perm, expected)
+    """
 
-    def assert_has_object_permission(self, expected):
-        has_perm = self.permission_obj.has_object_permission(self.request, self.view, self.obj)
-        self.assertEqual(has_perm, expected)
+    PERMISSION_MAPPINGS = []
+    permission_class_instance = None
 
-    def assert_permission(self, expected):
-        has_perm = (self.permission_obj.has_permission(self.request, self.view) and
-                    self.permission_obj.has_object_permission(self.request, self.view, self.obj))
-        self.assertEqual(has_perm, expected)
+    def has_permission(self, url, method, roles, user_id, instance):
+        resolver_match = resolve(url)
+
+        user = type('TestUser', (Mock,), {'roles': roles, 'id': user_id})
+        request = type('TestRequest', (Mock,), {'user': user, 'method': method})
+        view = type('TestView', (Mock,), {'kwargs': resolver_match.kwargs})
+
+        if not view.kwargs:
+            return self.permission_class_instance.has_permission(request, view)
+        return (self.permission_class_instance.has_permission(request, view) and
+                self.permission_class_instance.has_object_permission(request, view, instance))
+
+    def test_permissions(self):
+        for permission_mapping in self.PERMISSION_MAPPINGS:
+            url = permission_mapping.get('url')
+            method = permission_mapping.get('method').upper()
+            roles = permission_mapping.get('roles')
+            expected = permission_mapping.get('expected')
+            user_id = permission_mapping.get('user_id', 1)
+            instance = permission_mapping.get('instance', None)
+
+            has_perm = self.has_permission(url, method, roles, user_id, instance)
+            message = ("Expecting {} for {} {} with roles={}. I got instead {}"
+                       .format(expected, method, url, roles, has_perm))
+            self.assertEqual(has_perm, expected, message)
+
