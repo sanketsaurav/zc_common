@@ -138,6 +138,7 @@ class PermissionTestMixin(object):
                 self.permission_class_instance.has_object_permission(request, view, instance))
 
     def test_permissions(self):
+        # I will modify this method so that each iteration generates it's own test.
         for permission_mapping in self.PERMISSION_MAPPINGS:
             url = permission_mapping.get('url')
             method = permission_mapping.get('method').upper()
@@ -150,4 +151,3 @@ class PermissionTestMixin(object):
             message = ("Expecting {} for {} {} with roles={}. I got instead {}"
                        .format(expected, method, url, roles, has_perm))
             self.assertEqual(has_perm, expected, message)
-
