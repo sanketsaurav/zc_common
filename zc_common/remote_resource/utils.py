@@ -1,6 +1,7 @@
+from __future__ import absolute_import
+
 import sys
-import warnings
-from .request import make_service_request, get_route_from_fk, ServiceRequestException
+from zc_common.remote_resource.request import make_service_request, get_route_from_fk, ServiceRequestException
 
 
 class EmitEventFailure(Exception):
