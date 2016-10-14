@@ -1,12 +1,10 @@
 import re
 from importlib import import_module
 
-from django.core.urlresolvers import resolve
 from mock import Mock
 
 from django.contrib.admindocs.views import extract_views_from_urlpatterns, simplify_regex
 from django.conf import settings
-from django.test import TestCase
 
 from .authentication import User
 from .utils import jwt_payload_handler, service_jwt_payload_handler, jwt_encode_handler
@@ -124,61 +122,3 @@ class PermissionTestMixin(object):
         has_perm = (self.permission_obj.has_permission(self.request, self.view) and
                     self.permission_obj.has_object_permission(self.request, self.view, self.obj))
         self.assertEqual(has_perm, expected)
-
-
-class PermissionTestCase(TestCase):
-    """
-    This class is intended to replace PermissionTestMixin. It expands all permission tests and execute each
-    as one test case.
-
-    Example usage:
-
-        from nose_parameterized import parameterized, param
-
-        class UserPermissionTestCase(PermissionTestCase):
-            permission_class_instance = None
-            permission_mappings = [
-                param(
-                    url=reverse('users'),
-                    method='GET',
-                    roles=['user'],
-                    expected=False,
-                    user_id=10  # optional
-                    instance=user   # optional
-                )
-            ]
-
-            @parameterized.expand(permission_mappings, testcase_func_name=PermissionTestCase.create_test_name)
-            def test_permissions(self, **kwargs):
-                self.evaluate_permission(**kwargs)
-    """
-
-    permission_class_instance = None
-    permission_mappings = None
-
-    @classmethod
-    def create_test_name(cls, testcase_func, param_num, param):
-        method = param.kwargs.get('method')
-        url = param.kwargs.get('url')
-        roles = param.kwargs.get('roles')
-        expected = 'pass' if param.kwargs.get('expected') else 'faill'
-
-        return 'test_permission_{}_{}_as_{}__{}'.format(method, url.replace('/', '_'), '-'.join(roles), expected)
-
-    def has_permission(self, url, method, roles, user_id, instance):
-        resolver_match = resolve(url)
-
-        user = type('TestUser', (Mock,), {'roles': roles, 'id': user_id})
-        request = type('TestRequest', (Mock,), {'user': user, 'method': method})
-        view = type('TestView', (Mock,), {'kwargs': resolver_match.kwargs})
-
-        if not view.kwargs:
-            return self.permission_class_instance.has_permission(request, view)
-        return (self.permission_class_instance.has_permission(request, view) and
-                self.permission_class_instance.has_object_permission(request, view, instance))
-
-    def evaluate_permission(self, url, method, roles, expected, user_id=None, instance=None):
-        has_perm = self.has_permission(url, method, roles, user_id, instance)
-        message = ("Expecting {} for {} {} with roles={}. I got instead {}"
-                   .format(expected, method, url, roles, has_perm))
-        self.assertEqual(has_perm, expected, message)
