@@ -13,7 +13,7 @@ def get_packages(package):
 
 setup(
     name='zc_common',
-    version='0.2.4',
+    version='0.2.5',
     description="Shared code for ZeroCater microservices",
     long_description='',
     keywords='zerocater python util',
