@@ -22,7 +22,7 @@ def emit_microservice_event(event_type, *args, **kwargs):
     channel = connection.channel()
     channel.queue_declare(queue=event_queue_name, durable=True)
 
-    task_id = uuid.uuid4()
+    task_id = str(uuid.uuid4())
     # task_name = 'ms-events.{}'.format(task_id)
 
     keyword_args = {'uuid': task_id}
@@ -31,7 +31,7 @@ def emit_microservice_event(event_type, *args, **kwargs):
     message = {
         'task': 'ms-events.microservice_event',
         'id': task_id,
-        'args': [event_type] + args,
+        'args': [event_type] + list(args),
         'kwargs': keyword_args
     }
 
