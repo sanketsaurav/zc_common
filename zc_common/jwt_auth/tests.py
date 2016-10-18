@@ -1,5 +1,6 @@
 import re
 from importlib import import_module
+
 from mock import Mock
 
 from django.contrib.admindocs.views import extract_views_from_urlpatterns, simplify_regex
