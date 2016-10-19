@@ -25,6 +25,10 @@ Make sure that the `BROKER_URL` either in ``.env.sample` or in `settings.py` if 
 BROKER_URL=amqp://guest:guest@rabbitmq:5672/%2F
 ```
 
+## New requirements
+
+Sending and receiving events requires the `pika` and `ujson` libraries to be installed via pip and added to the `requirements.txt` file.
+
 ## Set up service for listening to events
 
 Create a file called `microservice_events.py` and place it somewhere like the `mp-slots-and-orders/slots_and_orders/tasks/` directory. For now this will be an empty file, but in the future this is where any events that this service listens to will go.
