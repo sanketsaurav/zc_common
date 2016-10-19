@@ -1,8 +1,12 @@
+import logging
 import pika
 import ujson
 import uuid
 
 from django.conf import settings
+
+
+logger = logging.getLogger('django')
 
 
 class EmitEventException(Exception):
@@ -23,13 +27,12 @@ def emit_microservice_event(event_type, *args, **kwargs):
     channel.queue_declare(queue=event_queue_name, durable=True)
 
     task_id = str(uuid.uuid4())
-    # task_name = 'ms-events.{}'.format(task_id)
 
-    keyword_args = {'uuid': task_id}
+    keyword_args = {'task_id': task_id}
     keyword_args.update(kwargs)
 
     message = {
-        'task': 'ms-events.microservice_event',
+        'task': 'microservice.event',
         'id': task_id,
         'args': [event_type] + list(args),
         'kwargs': keyword_args
@@ -37,10 +40,17 @@ def emit_microservice_event(event_type, *args, **kwargs):
 
     event_body = ujson.dumps(message)
 
-    response = channel.basic_publish('mp-events', '', event_body, pika.BasicProperties(
+    logger.info('MICROSERVICE_EVENT::EMIT: Emitting [{}:{}] event for object ({}:{}) and user {}'.format(
+        event_type, task_id, kwargs.get('resource_type'), kwargs.get('resource_id'),
+        kwargs.get('user_id')))
+
+    response = channel.basic_publish('microservice-events', '', event_body, pika.BasicProperties(
         content_type='application/json', content_encoding='utf-8'))
 
     if not response:
+        logger.info('MICROSERVICE_EVENT::EMIT_FAILURE: Failure emitting [{}:{}] event for object ({}:{}) and user {}'.format(
+            event_type, task_id, kwargs.get('resource_type'), kwargs.get('resource_id'),
+            kwargs.get('user_id')))
         raise EmitEventException("Message may have failed to deliver")
 
     return response
