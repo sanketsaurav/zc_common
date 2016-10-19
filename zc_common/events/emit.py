@@ -48,9 +48,9 @@ def emit_microservice_event(event_type, *args, **kwargs):
         content_type='application/json', content_encoding='utf-8'))
 
     if not response:
-        logger.info('MICROSERVICE_EVENT::EMIT_FAILURE: Failure emitting [{}:{}] event for object ({}:{}) and user {}'.format(
-            event_type, task_id, kwargs.get('resource_type'), kwargs.get('resource_id'),
-            kwargs.get('user_id')))
+        logger.info(
+            'MICROSERVICE_EVENT::EMIT_FAILURE: Failure emitting [{}:{}] event for object ({}:{}) and user {}'.format(
+                event_type, task_id, kwargs.get('resource_type'), kwargs.get('resource_id'), kwargs.get('user_id')))
         raise EmitEventException("Message may have failed to deliver")
 
     return response
