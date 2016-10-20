@@ -25,14 +25,7 @@ class RouteNotFoundException(Exception):
 
 
 class ServiceRequestException(Exception):
-    """An exception commonly thrown when an HTTP request to another service endpoint fails."""
-    message = None
-    response = None
-
-    def __init__(self, message, response):
-        super(ServiceRequestException, self).__init__(message)
-        self.message = message
-        self.response = response
+    pass
 
 
 class RemoteResourceException(Exception):
@@ -136,7 +129,7 @@ def make_service_request(service_name, endpoint, method=GET, data=None):
     if 400 <= response.status_code < 600:
         http_error_msg = '{0} Error: {1} for {2}. Content: {3}'.format(
             response.status_code, response.reason, response.url, response.text)
-        raise ServiceRequestException(http_error_msg, response)
+        raise ServiceRequestException(http_error_msg)
 
     return response
 
