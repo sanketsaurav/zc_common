@@ -9,7 +9,7 @@ from raven.contrib.django.raven_compat.models import client
 from zc_common.events.emit import emit_microservice_event
 
 
-S3_BUCKET_NAME = 'mp-email'
+S3_BUCKET_NAME = 'zc-mp-email'
 EMAIL_EVENT_TYPE = 'send_email'
 ATTACHMENT_PREFIX = 'attachment_'
 
@@ -43,9 +43,23 @@ def generate_s3_folder_name(email_uuid):
     return "{}/{}_{}".format(email_date, email_timestamp, email_uuid)
 
 
+def upload_to_s3(bucket, s3_folder_name, content, content_type, content_name=''):
+    if content:
+        content_key = "{}/{}".format(s3_folder_name, content_type)
+        if content_name:
+            content_key += '_{}'.format(content_name)
+
+        k = Key(bucket)
+        k.key = content_key
+        k.set_contents_from_string(content)
+        return content_key
+    return None
+
+
 def send_email(from_email=None, to=None, cc=None, bcc=None, reply_to=None,
                subject=None, plaintext_body=None, html_body=None, headers=None,
-               files=None, attachments=None, user_id=None, resource_type=None, resource_id=None):
+               files=None, attachments=None, user_id=None, resource_type=None, resource_id=None,
+               logger=None):
     """
     files:       A list of file paths
     attachments: A list of tuples of the format (filename, content_type, content)
@@ -54,35 +68,20 @@ def send_email(from_email=None, to=None, cc=None, bcc=None, reply_to=None,
     bucket = get_s3_email_bucket()
     s3_folder_name = generate_s3_folder_name(email_uuid)
 
-    html_body_key = None
-    if html_body:
-        html_body_key = "{}/html".format(s3_folder_name)
-        k = Key(bucket)
-        k.key = html_body_key
-        k.set_contents_from_string(html_body)
-
-    plaintext_body_key = None
-    if plaintext_body:
-        plaintext_body_key = "{}/plaintext".format(s3_folder_name)
-        k = Key(bucket)
-        k.key = plaintext_body_key
-        k.set_contents_from_string(plaintext_body)
+    html_body_key = upload_to_s3(bucket, s3_folder_name, html_body, 'html')
+    plaintext_body_key = upload_to_s3(bucket, s3_folder_name, plaintext_body, 'plaintext')
 
     attachments_keys = []
     if attachments:
         for filename, mimetype, attachment in attachments:
-            attachment_key = "{}/attachment_{}".format(s3_folder_name, filename)
-            k = Key(bucket)
-            k.key = attachment_key
-            k.set_contents_from_filename(attachment)
+            attachment_key = upload_to_s3(bucket, s3_folder_name,
+                                          attachment, 'attachment', filename)
             attachments_keys.append(attachment_key)
     if files:
         for filepath in files:
             filename = filepath.split('/')[-1]
-            attachment_key = "{}/attachment_{}".format(s3_folder_name, filename)
-            k = Key(bucket)
-            k.key = attachment_key
-            k.set_contents_from_filename(filepath)
+            attachment_key = upload_to_s3(bucket, s3_folder_name,
+                                          attachment, 'attachment', filename)
             attachments_keys.append(attachment_key)
 
     email_data = {
@@ -97,6 +96,10 @@ def send_email(from_email=None, to=None, cc=None, bcc=None, reply_to=None,
         'attachments_keys': attachments_keys,
         'headers': headers,
     }
+    if logger:
+        logger.info('SEND_EMAIL: Sent email with UUID {} and data {}'.format(
+            email_uuid, email_data
+        ))
 
     event_data = {
         'user_id': user_id,
