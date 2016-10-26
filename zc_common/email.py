@@ -43,17 +43,25 @@ def generate_s3_folder_name(email_uuid):
     return "{}/{}_{}".format(email_date, email_timestamp, email_uuid)
 
 
-def upload_to_s3(bucket, s3_folder_name, content, content_type, content_name=''):
-    if content:
-        content_key = "{}/{}".format(s3_folder_name, content_type)
-        if content_name:
-            content_key += '_{}'.format(content_name)
+def generate_s3_content_key(s3_folder_name, content_type, content_name=''):
+    content_key = "{}/{}".format(s3_folder_name, content_type)
+    if content_name:
+        content_key += '_{}'.format(content_name)
+    return content_key
 
+
+def upload_string_to_s3(bucket, content_key, content):
+    if content:
         k = Key(bucket)
         k.key = content_key
         k.set_contents_from_string(content)
-        return content_key
-    return None
+
+
+def upload_file_to_s3(bucket, content_key, filename):
+    if filename:
+        k = Key(bucket)
+        k.key = content_key
+        k.set_contents_from_filename(filename)
 
 
 def send_email(from_email=None, to=None, cc=None, bcc=None, reply_to=None,
@@ -67,24 +75,32 @@ def send_email(from_email=None, to=None, cc=None, bcc=None, reply_to=None,
     email_uuid = uuid.uuid4()
     bucket = get_s3_email_bucket()
     s3_folder_name = generate_s3_folder_name(email_uuid)
+    if logger:
+        msg = '''MICROSERVICE_SEND_EMAIL: Upload email with UUID {}, to {}, from {},
+        with attachments {} and files {}'''
+        logger.info(msg.format(email_uuid, to, from_email, attachments, files))
 
-    html_body_key = upload_to_s3(bucket, s3_folder_name, html_body, 'html')
-    plaintext_body_key = upload_to_s3(bucket, s3_folder_name, plaintext_body, 'plaintext')
+    html_body_key = generate_s3_content_key(s3_folder_name, 'html')
+    upload_string_to_s3(bucket, html_body_key, html_body)
+    plaintext_body_key = generate_s3_content_key(s3_folder_name, 'plaintext')
+    upload_string_to_s3(bucket, plaintext_body_key, plaintext_body)
 
     attachments_keys = []
     if attachments:
         for filename, mimetype, attachment in attachments:
-            attachment_key = upload_to_s3(bucket, s3_folder_name,
-                                          attachment, 'attachment', filename)
+            attachment_key = generate_s3_content_key(s3_folder_name, 'attachment',
+                                                     content_name=filename)
+            upload_file_to_s3(bucket, attachment_key, attachment)
             attachments_keys.append(attachment_key)
     if files:
         for filepath in files:
             filename = filepath.split('/')[-1]
-            attachment_key = upload_to_s3(bucket, s3_folder_name,
-                                          attachment, 'attachment', filename)
+            attachment_key = generate_s3_content_key(s3_folder_name, 'attachment',
+                                                     content_name=filename)
+            upload_file_to_s3(bucket, attachment_key, filepath)
             attachments_keys.append(attachment_key)
 
-    email_data = {
+    event_data = {
         'from_email': from_email,
         'to': to,
         'cc': cc,
@@ -95,17 +111,14 @@ def send_email(from_email=None, to=None, cc=None, bcc=None, reply_to=None,
         'html_body_key': html_body_key,
         'attachments_keys': attachments_keys,
         'headers': headers,
-    }
-    if logger:
-        logger.info('SEND_EMAIL: Sent email with UUID {} and data {}'.format(
-            email_uuid, email_data
-        ))
-
-    event_data = {
         'user_id': user_id,
         'resource_type': resource_type,
         'resource_id': resource_id,
     }
-    event_data.update(email_data)
+
+    if logger:
+        logger.info('MICROSERVICE_SEND_EMAIL: Sent email with UUID {} and data {}'.format(
+            email_uuid, event_data
+        ))
 
     emit_microservice_event(EMAIL_EVENT_TYPE, **event_data)
