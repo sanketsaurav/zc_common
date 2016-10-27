@@ -1,6 +1,4 @@
 import logging
-import pika
-import ujson
 import uuid
 
 from django.conf import settings
@@ -14,6 +12,9 @@ class EmitEventException(Exception):
 
 
 def emit_microservice_event(event_type, *args, **kwargs):
+    import pika
+    import ujson
+
     url = settings.BROKER_URL
 
     params = pika.URLParameters(url)
