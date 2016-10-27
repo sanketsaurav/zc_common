@@ -18,13 +18,6 @@ class MissingCredentialsError(Exception):
     pass
 
 
-def send_error_to_sentry():
-    try:
-        client.captureException()
-    except:
-        pass
-
-
 def get_s3_email_bucket():
     aws_access_key_id = settings.AWS_ACCESS_KEY_ID
     aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
