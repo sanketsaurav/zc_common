@@ -5,7 +5,6 @@ import uuid
 import boto
 from boto.s3.key import Key
 from django.conf import settings
-from raven.contrib.django.raven_compat.models import client
 from zc_common.events.emit import emit_microservice_event
 
 
@@ -73,10 +72,15 @@ def send_email(from_email=None, to=None, cc=None, bcc=None, reply_to=None,
         with attachments {} and files {}'''
         logger.info(msg.format(email_uuid, to, from_email, attachments, files))
 
-    html_body_key = generate_s3_content_key(s3_folder_name, 'html')
-    upload_string_to_s3(bucket, html_body_key, html_body)
-    plaintext_body_key = generate_s3_content_key(s3_folder_name, 'plaintext')
-    upload_string_to_s3(bucket, plaintext_body_key, plaintext_body)
+    html_body_key = None
+    if html_body:
+        html_body_key = generate_s3_content_key(s3_folder_name, 'html')
+        upload_string_to_s3(bucket, html_body_key, html_body)
+
+    plaintext_body_key = None
+    if plaintext_body:
+        plaintext_body_key = generate_s3_content_key(s3_folder_name, 'plaintext')
+        upload_string_to_s3(bucket, plaintext_body_key, plaintext_body)
 
     attachments_keys = []
     if attachments:
