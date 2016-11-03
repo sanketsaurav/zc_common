@@ -87,7 +87,7 @@ def send_email(from_email=None, to=None, cc=None, bcc=None, reply_to=None,
         for filename, mimetype, attachment in attachments:
             attachment_key = generate_s3_content_key(s3_folder_name, 'attachment',
                                                      content_name=filename)
-            upload_file_to_s3(bucket, attachment_key, attachment)
+            upload_string_to_s3(bucket, attachment_key, attachment)
             attachments_keys.append(attachment_key)
     if files:
         for filepath in files:
