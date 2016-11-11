@@ -51,3 +51,12 @@ def model_to_dict(instance, follow_relations=True, excludes=[], relation_exclude
         data.setdefault(field_obj.name, field_value)
 
     return data
+
+
+def event_payload(resource_type, resource_id, user_id, meta):
+    return {
+        'resource_type': resource_type,
+        'resource_id': resource_id,
+        'user_id': user_id,
+        'meta': meta
+    }
