@@ -1,29 +1,38 @@
-from django.db.models import DateTimeField
+from django.db.models import DateTimeField, OneToOneField, ManyToManyField, ForeignKey
 
 
 def model_to_dict(instance, follow_relations=True, excludes=[], relation_excludes=[]):
     """
-    This function returns a native python dict corresponding to the model's attributes. I included
+    Returns a native python dict corresponding to the model's attributes. I included
     attributes that are only defined on the model to avoid infinite recursion and redundant
     data. It will also follow relations up to only one level by default.
+
+    Note: this function is written to support django v1.6 in legacy. Since most of the APIs used have been
+          dropped out in v1.10, services should be careful not to upgrade without changing this function.
 
     Todo: handle RemoteForeignKey and GenericRemoteForeignKey.
     """
     data = {}
 
-    for field in instance._meta.get_fields():
-        if not field.concrete or field.name in excludes:
+    field_names = [name for name in instance._meta.get_all_field_names() if name not in excludes]
+    fields = [instance._meta.get_field_by_name(name) for name in field_names]
+
+    for item in fields:
+        is_local = item[2]
+        field_obj = item[0]
+
+        if not is_local:
             continue
 
-        field_value = field.value_from_object(instance)
+        field_value = field_obj.value_from_object(instance)
 
-        if field.one_to_one or field.many_to_one:
+        if isinstance(field_obj, OneToOneField) or isinstance(field_obj, ForeignKey):
             if follow_relations:
                 field_value = model_to_dict(field_value, follow_relations=False, excludes=relation_excludes)
             else:
                 field_value = field_value.pk
 
-        if field.many_to_many:
+        if isinstance(field_obj, ManyToManyField):
             new_field_value = []
 
             for value in field_value:
@@ -36,9 +45,9 @@ def model_to_dict(instance, follow_relations=True, excludes=[], relation_exclude
             field_value = new_field_value
 
         # DateTimeField is not JSON serializable. Convert it to it's string version.
-        if isinstance(field, DateTimeField):
-            field_value = unicode(field_value)
+        if isinstance(field_obj, DateTimeField):
+            field_value = unicode(field_value) if field_value else None
 
-        data.setdefault(field.name, field_value)
+        data.setdefault(field_obj.name, field_value)
 
     return data
