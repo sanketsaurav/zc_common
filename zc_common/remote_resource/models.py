@@ -13,6 +13,14 @@ class RemoteResource(object):
 
 
 class RemoteForeignKey(models.CharField):
+    is_relation = True
+    many_to_many = False
+    many_to_one = True
+    one_to_many = False
+    one_to_one = False
+    related_model = None
+    remote_field = None
+
     description = "A foreign key pointing to an external resource"
 
     def __init__(self, type_name, *args, **kwargs):
@@ -52,6 +60,13 @@ class RemoteForeignKey(models.CharField):
         del kwargs['max_length']
 
         return name, path, args, kwargs
+
+    def contribute_to_class(self, cls, name, **kwargs):
+        self.name = name
+        self.model = cls
+        cls._meta.add_field(self, virtual=True)
+
+        setattr(cls, name, self)
 
 
 class GenericRemoteForeignKey(object):
