@@ -36,6 +36,8 @@ class EmailTests(TestCase):
         for expected_arg in self.expected_event_args:
             self.assertTrue(expected_arg in event_args)
 
+        self.assertTrue(event_args['task_id'])
+
     @mock.patch('zc_common.email.get_s3_email_bucket')
     @mock.patch('zc_common.email.emit_microservice_event')
     def test_send_email_no_html_body(self, mock_emit_event, mock_s3_email_bucket):
@@ -74,8 +76,9 @@ class EmailTests(TestCase):
             ('file2.pdf', 'application/pdf', None),
             ('file3.pdf', 'application/pdf', None),
         ]
+        self.send_email_kwargs['attachments'] = attachments
 
-        email.send_email(attachments=attachments)
+        email.send_email(**self.send_email_kwargs)
         mock_emit_event.assert_called_once()
         attachments_keys = mock_emit_event.call_args_list[0][1]['attachments_keys']
         self.assertEqual(len(attachments_keys), len(attachments))
@@ -85,8 +88,10 @@ class EmailTests(TestCase):
     def test_send_email_files_and_attachments(self, mock_emit_event, mock_get_bucket):
         attachments = [('file1.pdf', 'application/pdf', None), ]
         files = ['tests/email_common/file1.pdf']
+        self.send_email_kwargs['attachments'] = attachments
+        self.send_email_kwargs['files'] = files
 
-        email.send_email(attachments=attachments, files=files)
+        email.send_email(**self.send_email_kwargs)
         mock_emit_event.assert_called_once()
         attachments_keys = mock_emit_event.call_args_list[0][1]['attachments_keys']
         self.assertEqual(len(attachments_keys), len(attachments) + len(files))
@@ -94,9 +99,57 @@ class EmailTests(TestCase):
     @mock.patch('zc_common.email.get_s3_email_bucket')
     @mock.patch('zc_common.email.emit_microservice_event')
     def test_send_email_headers(self, mock_emit_event, mock_get_bucket):
-        email_headers = {'send_email_header': True}
+        headers = {'send_email_header': True}
+        self.send_email_kwargs['headers'] = headers
 
-        email.send_email(headers=email_headers)
+        email.send_email(**self.send_email_kwargs)
         mock_emit_event.assert_called_once()
         headers = mock_emit_event.call_args_list[0][1]['headers']
-        self.assertEqual(len(headers), len(email_headers))
+        self.assertEqual(len(headers), len(headers))
+
+    @mock.patch('zc_common.email.get_s3_email_bucket')
+    @mock.patch('zc_common.email.emit_microservice_event')
+    def test_send_email_use_string_parameters(self, mock_emit_event, mock_get_bucket):
+        to = 'to_string@zerocater.com'
+        cc = 'cc_string_1@zerocater.com,cc_string_2@zerocater.com'
+        bcc = 'bcc_string_1@zerocater.com'
+        reply_to = 'reply_to_string@zerocater.com'
+        self.send_email_kwargs['to'] = to
+        self.send_email_kwargs['cc'] = cc
+        self.send_email_kwargs['bcc'] = bcc
+        self.send_email_kwargs['reply_to'] = reply_to
+        email.send_email(**self.send_email_kwargs)
+
+        mock_emit_event.assert_called_once()
+        event_to = mock_emit_event.call_args_list[0][1]['to']
+        event_cc = mock_emit_event.call_args_list[0][1]['cc']
+        event_bcc = mock_emit_event.call_args_list[0][1]['bcc']
+        event_reply_to = mock_emit_event.call_args_list[0][1]['reply_to']
+        self.assertEqual(event_to, to.split(','))
+        self.assertEqual(event_cc, cc.split(','))
+        self.assertEqual(event_bcc, bcc.split(','))
+        self.assertEqual(event_reply_to, reply_to.split(','))
+
+    @mock.patch('zc_common.email.get_s3_email_bucket')
+    @mock.patch('zc_common.email.emit_microservice_event')
+    def test_send_email_invalid_to__fail(self, mock_emit_event, mock_get_bucket):
+        to = {'to': 'to_string@zerocater.com'}
+        self.send_email_kwargs['to'] = to
+
+        with self.assertRaises(TypeError):
+            email.send_email(**self.send_email_kwargs)
+
+        mock_emit_event.assert_not_called()
+
+    @mock.patch('zc_common.email.get_s3_email_bucket')
+    @mock.patch('zc_common.email.emit_microservice_event')
+    def test_send_email_no_recipients__fail(self, mock_emit_event, mock_get_bucket):
+        self.send_email_kwargs['to'] = None
+        self.send_email_kwargs['cc'] = None
+        self.send_email_kwargs['bcc'] = None
+        self.send_email_kwargs['reply_to'] = None
+
+        with self.assertRaises(TypeError):
+            email.send_email(**self.send_email_kwargs)
+
+        mock_emit_event.assert_not_called()
