@@ -24,7 +24,7 @@ def model_to_dict(instance, follow_relations=True, excludes=[], relation_exclude
         if not is_local:
             continue
 
-        field_value = field_obj.value_from_object(instance)
+        field_value = getattr(instance, field_obj.name)
 
         if isinstance(field_obj, OneToOneField) or isinstance(field_obj, ForeignKey):
             if follow_relations:
@@ -35,7 +35,7 @@ def model_to_dict(instance, follow_relations=True, excludes=[], relation_exclude
         if isinstance(field_obj, ManyToManyField):
             new_field_value = []
 
-            for value in field_value:
+            for value in field_value.all():
                 if follow_relations:
                     new_value = model_to_dict(value, follow_relations=False, excludes=relation_excludes)
                 else:
