@@ -27,10 +27,11 @@ def model_to_dict(instance, follow_relations=True, excludes=[], relation_exclude
         field_value = getattr(instance, field_obj.name)
 
         if isinstance(field_obj, OneToOneField) or isinstance(field_obj, ForeignKey):
-            if follow_relations:
-                field_value = model_to_dict(field_value, follow_relations=False, excludes=relation_excludes)
-            else:
-                field_value = field_value.pk
+            if field_value:
+                if follow_relations:
+                    field_value = model_to_dict(field_value, follow_relations=False, excludes=relation_excludes)
+                else:
+                    field_value = field_value.pk
 
         if isinstance(field_obj, ManyToManyField):
             new_field_value = []
