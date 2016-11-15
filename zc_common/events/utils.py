@@ -1,11 +1,12 @@
 from django.db.models import DateTimeField, OneToOneField, ManyToManyField, ForeignKey
 
 
-def model_to_dict(instance, follow_relations=True, excludes=[], relation_excludes=[]):
+def model_to_dict(instance, follow_relations=True, excludes=[], relation_excludes=[], includes=[],
+                  relation_includes=[]):
     """
-    Returns a native python dict corresponding to the model's attributes. I included
-    attributes that are only defined on the model to avoid infinite recursion and redundant
-    data. It will also follow relations up to only one level by default.
+    Returns a native python dict corresponding to the model's attributes. You can optionally specify fields to
+    ignore by using excludes and relation_excludes. You can also specify which attributes to
+    specifically return by using includes and relation_includes.
 
     Note: this function is written to support django v1.6 in legacy. Since most of the APIs used have been
           dropped out in v1.10, services should be careful not to upgrade without changing this function.
@@ -13,9 +14,18 @@ def model_to_dict(instance, follow_relations=True, excludes=[], relation_exclude
     Todo: handle RemoteForeignKey and GenericRemoteForeignKey.
     """
     data = {}
+    attributes = []
 
-    field_names = [name for name in instance._meta.get_all_field_names() if name not in excludes]
-    fields = [instance._meta.get_field_by_name(name) for name in field_names]
+    if includes:
+        attributes = includes
+
+    if excludes:
+        attributes = [name for name in instance._meta.get_all_field_names() if name not in excludes]
+
+    if not attributes:
+        attributes = [name for name in instance._meta.get_all_field_names()]
+
+    fields = [instance._meta.get_field_by_name(name) for name in attributes]
 
     for item in fields:
         is_local = item[2]
@@ -29,7 +39,8 @@ def model_to_dict(instance, follow_relations=True, excludes=[], relation_exclude
         if isinstance(field_obj, OneToOneField) or isinstance(field_obj, ForeignKey):
             if field_value:
                 if follow_relations:
-                    field_value = model_to_dict(field_value, follow_relations=False, excludes=relation_excludes)
+                    field_value = model_to_dict(field_value, follow_relations=False, excludes=relation_excludes,
+                                                relation_includes=relation_includes)
                 else:
                     field_value = field_value.pk
 
@@ -38,7 +49,8 @@ def model_to_dict(instance, follow_relations=True, excludes=[], relation_exclude
 
             for value in field_value.all():
                 if follow_relations:
-                    new_value = model_to_dict(value, follow_relations=False, excludes=relation_excludes)
+                    new_value = model_to_dict(value, follow_relations=False, excludes=relation_excludes,
+                                              relation_includes=relation_includes)
                 else:
                     new_value = value.pk
                 new_field_value.append(new_value)
