@@ -1,4 +1,4 @@
-import json
+import ujson
 
 import datetime
 import dateutil.parser
@@ -32,7 +32,7 @@ class ResourceCreateTestCase(object):
         url = reverse(self.resource_view_name)
         self.create_json_format['data']['attributes'] = {'random_key': 'This is a random value'}
 
-        missing_parameters_request = json.dumps(self.create_json_format)
+        missing_parameters_request = ujson.dumps(self.create_json_format)
 
         response = self.client_post_auth(url, user_role=self.USER_ROLE,
                                          data=missing_parameters_request, content_type='application/vnd.api+json')
@@ -45,7 +45,7 @@ class ResourceCreateTestCase(object):
 
         url = reverse(self.resource_view_name)
         self.create_json_format['data']['relationships'] = {}
-        no_relationships_request = json.dumps(self.create_json_format)
+        no_relationships_request = ujson.dumps(self.create_json_format)
 
         response = self.client_post_auth(url, user_role=self.USER_ROLE,
                                          data=no_relationships_request, content_type='application/vnd.api+json')
@@ -62,7 +62,7 @@ class ResourceCreateTestCase(object):
             # No type provided
             'id': '1234'}
 
-        empty_relationships_request = json.dumps(self.create_json_format)
+        empty_relationships_request = ujson.dumps(self.create_json_format)
 
         response = self.client_post_auth(url, user_role=self.USER_ROLE, data=empty_relationships_request,
                                          content_type='application/vnd.api+json')
@@ -106,7 +106,7 @@ class ResourceCreateWithoutPermissionTestCase(object):
         url = reverse(self.resource_view_name)
         self.create_json_format['data']['attributes'] = {'random_key': 'This is a random value'}
 
-        missing_parameters_request = json.dumps(self.create_json_format)
+        missing_parameters_request = ujson.dumps(self.create_json_format)
 
         response = self.client_post_auth(url, user_role=self.USER_ROLE,
                                          data=missing_parameters_request, content_type='application/vnd.api+json')
@@ -119,7 +119,7 @@ class ResourceCreateWithoutPermissionTestCase(object):
 
         url = reverse(self.resource_view_name)
         self.create_json_format['data']['relationships'] = {}
-        no_relationships_request = json.dumps(self.create_json_format)
+        no_relationships_request = ujson.dumps(self.create_json_format)
 
         response = self.client_post_auth(url, user_role=self.USER_ROLE,
                                          data=no_relationships_request, content_type='application/vnd.api+json')
@@ -136,7 +136,7 @@ class ResourceCreateWithoutPermissionTestCase(object):
             # No type provided
             'id': '1234'}
 
-        empty_relationships_request = json.dumps(self.create_json_format)
+        empty_relationships_request = ujson.dumps(self.create_json_format)
 
         response = self.client_post_auth(url, user_role=self.USER_ROLE, data=empty_relationships_request,
                                          content_type='application/vnd.api+json')
@@ -166,7 +166,7 @@ class ResourceUpdateTestCase(object):
             reverse(self.resource_view_name, args=(self.resource.id,)),
             user_role=self.USER_ROLE,
             user_id=user_id,
-            data=json.dumps(request_data),
+            data=ujson.dumps(request_data),
             content_type='application/vnd.api+json'
         )
 
@@ -252,7 +252,7 @@ class ResourceUpdateTestCase(object):
         response = self.client_patch_auth(
             reverse(self.resource_view_name, args=(12457,)),
             user_role=self.USER_ROLE,
-            data=json.dumps(update_data),
+            data=ujson.dumps(update_data),
             content_type='application/vnd.api+json'
         )
 
@@ -267,7 +267,7 @@ class ResourceUpdateTestCase(object):
 
         response = self.client_patch_auth(
             reverse(self.resource_view_name, args=(self.resource.id,)),
-            data=json.dumps(update_data),
+            data=ujson.dumps(update_data),
             content_type='application/vnd.api+json'
         )
 
@@ -283,7 +283,7 @@ class ResourceUpdateLimitedPermissionTestCase(object):
             reverse(self.resource_view_name, args=(self.resource.id,)),
             user_role=self.USER_ROLE,
             user_id=user_id,
-            data=json.dumps(request_data),
+            data=ujson.dumps(request_data),
             content_type='application/vnd.api+json'
         )
 
@@ -341,7 +341,7 @@ class ResourceUpdateLimitedPermissionTestCase(object):
         response = self.client_patch_auth(
             reverse(self.resource_view_name, args=(12457,)),
             user_role=self.USER_ROLE,
-            data=json.dumps(update_data),
+            data=ujson.dumps(update_data),
             content_type='application/vnd.api+json'
         )
 
@@ -356,7 +356,7 @@ class ResourceUpdateLimitedPermissionTestCase(object):
 
         response = self.client_patch_auth(
             reverse(self.resource_view_name, args=(self.resource.id,)),
-            data=json.dumps(update_data),
+            data=ujson.dumps(update_data),
             content_type='application/vnd.api+json'
         )
 
@@ -377,7 +377,7 @@ class ResourceUpdateWithoutPermissionTestCase(ResourceUpdateLimitedPermissionTes
         response = self.client_patch_auth(
             reverse(self.resource_view_name, args=(12457,)),
             user_role=self.USER_ROLE,
-            data=json.dumps(update_data),
+            data=ujson.dumps(update_data),
             content_type='application/vnd.api+json'
         )
 

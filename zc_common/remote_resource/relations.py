@@ -1,5 +1,5 @@
 from collections import OrderedDict
-import json
+import ujson
 
 import six
 from django.db.models.manager import BaseManager
@@ -60,7 +60,7 @@ class RemoteResourceField(ResourceRelatedField):
     def to_internal_value(self, data):
         if isinstance(data, six.text_type):
             try:
-                data = json.loads(data)
+                data = ujson.loads(data)
             except ValueError:
                 self.fail('incorrect_type', data_type=type(data).__name__)
         if not isinstance(data, dict):

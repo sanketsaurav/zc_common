@@ -1,4 +1,4 @@
-import json
+import ujson
 import urllib
 
 import requests
@@ -41,8 +41,8 @@ class RemoteResourceWrapper(object):
 
     def _get_from_include(self, included, obj):
         if included:
-            results = filter(lambda x: x['type'] == obj['type'] and x['id'] == obj['id'], included)
-            return results[0] if results else None
+            res = included.get((obj['type'], obj['id']))
+            return res
         return None
 
     def create_properties_from_data(self, included):
@@ -135,17 +135,26 @@ def make_service_request(service_name, endpoint, method=GET, data=None):
 
 
 def wrap_resource_from_response(response):
-    json_response = json.loads(response.text)
+    json_response = ujson.loads(response.text)
 
     if 'data' not in json_response:
         msg = 'Error retrieving resource. Url: {0}. Content: {1}'.format(response.request.url, response.content)
         raise RemoteResourceException(msg)
 
     resource_data = json_response['data']
-    included_data = json_response.get('included')
+    included_raw = json_response.get('included')
+    included_data = _included_to_dict(included_raw)
     if isinstance(resource_data, list):
         return RemoteResourceListWrapper(resource_data, included_data)
     return RemoteResourceWrapper(resource_data, included_data)
+
+
+def _included_to_dict(included):
+    data = {}
+    for item in included:
+        data[(item['type'], item['id'])] = item
+
+    return data
 
 
 def get_remote_resource(service_name, resource_type, pk, include=None, page_size=None):
