@@ -40,7 +40,7 @@ def model_to_dict(instance, follow_relations=True, excludes=[], relation_exclude
             if field_value:
                 if follow_relations:
                     field_value = model_to_dict(field_value, follow_relations=False, excludes=relation_excludes,
-                                                relation_includes=relation_includes)
+                                                includes=relation_includes)
                 else:
                     field_value = field_value.pk
 
@@ -50,7 +50,7 @@ def model_to_dict(instance, follow_relations=True, excludes=[], relation_exclude
             for value in field_value.all():
                 if follow_relations:
                     new_value = model_to_dict(value, follow_relations=False, excludes=relation_excludes,
-                                              relation_includes=relation_includes)
+                                              includes=relation_includes)
                 else:
                     new_value = value.pk
                 new_field_value.append(new_value)
