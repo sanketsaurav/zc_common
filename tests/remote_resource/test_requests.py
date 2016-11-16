@@ -1,5 +1,4 @@
 import mock
-import json
 from django.test import TestCase
 from zc_common.remote_resource.request import (
     RemoteResourceWrapper, RemoteResourceListWrapper, get_route_from_fk, make_service_request, get_remote_resource,

@@ -1,4 +1,4 @@
-import json
+import ujson
 
 import datetime
 from inflection import camelize, underscore, pluralize
@@ -192,7 +192,7 @@ class ResponseTestCase(APITestCase):
 
     @staticmethod
     def load_json(response):
-        return json.loads(response.content.decode())
+        return ujson.loads(response.content.decode())
 
     @staticmethod
     def generate_token(user):
