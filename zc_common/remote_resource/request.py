@@ -148,11 +148,19 @@ def wrap_resource_from_response(response):
     return RemoteResourceWrapper(resource_data, included_data)
 
 
-def get_remote_resource(service_name, resource_type, pk, include=None):
+def get_remote_resource(service_name, resource_type, pk, include=None, page_size=None):
     """A shortcut function to make a GET request to a remote service."""
     url = get_route_from_fk(resource_type, pk)
+
+    params = {}
     if include:
-        url = '{}?{}'.format(url, urllib.urlencode({'include': include}))
+        params['include'] = include
+
+    if page_size:
+        params['page_size'] = page_size
+
+    if params:
+        url = '{}?{}'.format(url, urllib.urlencode(params))
 
     response = make_service_request(service_name, url)
     wrapped_resource = wrap_resource_from_response(response)
