@@ -151,6 +151,10 @@ def wrap_resource_from_response(response):
 
 def _included_to_dict(included):
     data = {}
+
+    if not included:
+        return data
+
     for item in included:
         data[(item['type'], item['id'])] = item
 
