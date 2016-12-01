@@ -65,7 +65,7 @@ def emit_index_rebuild_event(event_name, resource_type, model, batch_size, seria
     """
     A special helper method to emit events related to index_rebuilding.
 
-    Note: AWS_CUD_EVENTS_BUCKET_NAME must be present in your settings.
+    Note: AWS_INDEXER_BUCKET_NAME must be present in your settings.
     """
 
     if not queryset:
@@ -84,30 +84,7 @@ def emit_index_rebuild_event(event_name, resource_type, model, batch_size, seria
             instance_data = serializer(instance)
             data.append(instance_data)
 
-        filename = save_to_s3file(data, settings.AWS_CUD_EVENTS_BUCKET_NAME)
+        filename = save_to_s3file(data, settings.AWS_INDEXER_BUCKET_NAME)
         payload = event_payload(resource_type=resource_type, resource_id=None, user_id=None, meta={'s3_key': filename})
         emit_microservice_event(event_name, **payload)
         emitted_events_count += 1
-
-
-def emit_cud_event(event_name, resource_type, model, lookup_key_value, serializer=None, lookup_key='id'):
-    """
-    A special helper method to emit events related to CUD (Create, Update, and Delete) events.
-
-    Note: AWS_CUD_EVENTS_BUCKET_NAME must be present in your settings.
-    """
-
-    lookup_kwargs = {lookup_key: lookup_key_value}
-
-    if not serializer:
-        if model.objects.filter(**lookup_kwargs).exists():
-            return
-
-        payload = event_payload(resource_type, lookup_key_value, None, None)
-        return emit_microservice_event(event_name, **payload)
-
-    instance = model.objects.get(**lookup_kwargs)
-    instance_data = serializer(instance)
-    filename = save_to_s3file(instance_data, settings.AWS_CUD_EVENTS_BUCKET_NAME)
-    payload = event_payload(resource_type, lookup_key_value, None, {'s3_key': filename})
-    return emit_microservice_event(event_name, **payload)
