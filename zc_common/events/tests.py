@@ -7,7 +7,7 @@ import math
 from model_mommy import mommy
 from factory.django import mute_signals
 
-from django.db.models.signals import pre_save, post_save, pre_delete, post_delete
+from django.db.models.signals import pre_save, post_save
 from django.conf import settings
 
 from zc_common.events.utils import event_payload
