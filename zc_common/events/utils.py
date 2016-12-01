@@ -1,7 +1,8 @@
 import json
+import uuid
+
 import boto
 from boto.s3.key import Key
-from uuid import uuid4
 
 from django.conf import settings
 
@@ -48,7 +49,7 @@ def save_to_s3file(data, aws_bucket_name, aws_access_key_id=settings.AWS_ACCESS_
     connection = boto.connect_s3(aws_access_key_id, aws_secret_assess_key)
     bucket = connection.get_bucket(aws_bucket_name)
 
-    filename = str(uuid4())
+    filename = str(uuid.uuid4())
     content = json.dumps(data)
 
     key = Key(bucket, filename)
