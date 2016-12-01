@@ -1,7 +1,9 @@
 import logging
 import uuid
+import math
 
 from django.conf import settings
+from zc_common.events.utils import event_payload, save_to_s3file
 
 
 logger = logging.getLogger('django')
@@ -55,3 +57,55 @@ def emit_microservice_event(event_type, *args, **kwargs):
         raise EmitEventException("Message may have failed to deliver")
 
     return response
+
+
+def emit_index_rebuild_event(event_name, resource_type, model, batch_size, serializer, queryset=None):
+    """
+    A special helper method to emit events related to index_rebuilding.
+
+    Note: AWS_CUD_EVENTS_BUCKET_NAME must be present in your settings.
+    """
+
+    if not queryset:
+        queryset = model.objects.all()
+
+    objects_count = queryset.count()
+    total_events_count = int(math.ceil(objects_count / batch_size))
+    emitted_events_count = 0
+
+    while emitted_events_count < total_events_count:
+        start_index = emitted_events_count * batch_size
+        end_index = start_index + batch_size
+        data = []
+
+        for instance in queryset.order_by('id')[start_index:end_index]:
+            instance_data = serializer(instance)
+            data.append(instance_data)
+
+        filename = save_to_s3file(data, settings.AWS_CUD_EVENTS_BUCKET_NAME)
+        payload = event_payload(resource_type=resource_type, resource_id=None, user_id=None, meta={'s3_key': filename})
+        emit_microservice_event(event_name, **payload)
+        emitted_events_count += 1
+
+
+def emit_cud_event(event_name, resource_type, model, lookup_key_value, serializer=None, lookup_key='id'):
+    """
+    A special helper method to emit events related to CUD (Create, Update, and Delete) events.
+
+    Note: AWS_CUD_EVENTS_BUCKET_NAME must be present in your settings.
+    """
+
+    lookup_kwargs = {lookup_key: lookup_key_value}
+
+    if not serializer:
+        if model.objects.filter(**lookup_kwargs).exists():
+            return
+
+        payload = event_payload(resource_type, lookup_key_value, None, None)
+        return emit_microservice_event(event_name, **payload)
+
+    instance = model.objects.get(**lookup_kwargs)
+    instance_data = serializer(instance)
+    filename = save_to_s3file(instance_data, settings.AWS_CUD_EVENTS_BUCKET_NAME)
+    payload = event_payload(resource_type, lookup_key_value, None, {'s3_key': filename})
+    return emit_microservice_event(event_name, **payload)

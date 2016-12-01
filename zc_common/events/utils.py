@@ -1,3 +1,11 @@
+import json
+import boto
+from boto.s3.key import Key
+from uuid import uuid4
+
+from django.conf import settings
+
+
 def model_to_dict(instance, included_attributes=[]):
     """Returns a native python dict corresponding to selected attributes of a model instance."""
 
@@ -33,3 +41,16 @@ def event_payload(resource_type, resource_id, user_id, meta):
         'user_id': user_id,
         'meta': meta
     }
+
+
+def save_to_s3file(data, aws_bucket_name, aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                   aws_secret_assess_key=settings.AWS_SECRET_ACCESS_KEY):
+    connection = boto.connect_s3(aws_access_key_id, aws_secret_assess_key)
+    bucket = connection.get_bucket(aws_bucket_name)
+
+    filename = str(uuid4())
+    content = json.dumps(data)
+
+    key = Key(bucket, filename)
+    key.set_contents_from_string(content)
+    return filename
