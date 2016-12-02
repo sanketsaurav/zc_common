@@ -4,10 +4,6 @@ import mock
 import uuid
 import math
 
-from model_mommy import mommy
-from factory.django import mute_signals
-
-from django.db.models.signals import pre_save, post_save
 from django.conf import settings
 
 from zc_common.events.utils import event_payload
@@ -34,8 +30,7 @@ class IndexRebuildTestMixin(object):
         self._queryset = self.queryset if self.queryset else self.model.objects.all()
 
     def create_test_data(self):
-        with mute_signals(pre_save, post_save):
-            mommy.make(self.model, _quantity=self.objects_count)
+        raise NotImplementedError("Override this method to create test data")
 
     @mock.patch('zc_common.events.emit.emit_microservice_event')
     @mock.patch('zc_common.events.emit.save_to_s3file')
