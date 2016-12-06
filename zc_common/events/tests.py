@@ -9,7 +9,7 @@ from django.conf import settings
 from zc_common.events.utils import event_payload
 
 
-class IndexRebuildTestMixin(object):
+class GlobalIndexRebuildTestMixin(object):
     index_rebuild_event_task = None
     resource_index_rebuild_task = None
     model = None
@@ -25,7 +25,7 @@ class IndexRebuildTestMixin(object):
     custom_batch_size = 5
 
     def setUp(self):
-        super(IndexRebuildTestMixin, self).setUp()
+        super(GlobalIndexRebuildTestMixin, self).setUp()
         self.create_test_data()
         self._queryset = self.queryset if self.queryset else self.model.objects.all()
 
@@ -92,74 +92,6 @@ class IndexRebuildTestMixin(object):
                   'Make sure processed objects differ when using both querysets. ' \
                   'Otherwise, set queryset to None.'
             self.assertTrue(self.queryset.count() < self.model.objects.count(), msg)
-
-    @mock.patch('zc_common.events.emit.emit_microservice_event')
-    @mock.patch('zc_common.events.emit.save_to_s3file')
-    def test_event_emitted_from_received_index_rebuild_event_without_resource_type__pass(
-            self, mock_save_to_s3file, mock_emit_microservice_event):
-        s3_key = str(uuid.uuid4())
-        mock_save_to_s3file.return_value = s3_key
-
-        self.index_rebuild_event_task(meta={'batch_size': self.custom_batch_size})
-
-        total_events = int(math.ceil(self.objects_count / self.custom_batch_size))
-        events_count = 0
-
-        while events_count < total_events:
-            start_index = events_count * self.custom_batch_size
-            end_index = start_index + self.custom_batch_size
-
-            data = []
-
-            for instance in self._queryset.order_by('id')[start_index:end_index]:
-                instance_data = self.serializer.__func__(instance)
-
-                for attr in self.attributes:
-                    msg = 'Attribute {} not found in serialized model instance. data: {}'
-                    self.assertTrue(attr in instance_data, msg.format(attr, instance_data))
-
-                data.append(instance_data)
-
-            mock_save_to_s3file.assert_any_call(data, settings.AWS_INDEXER_BUCKET_NAME)
-
-            payload = event_payload(self.resource_type, None, None, {'s3_key': s3_key})
-            mock_emit_microservice_event.assert_any_call(self.event_name, **payload)
-
-            events_count += 1
-
-    @mock.patch('zc_common.events.emit.emit_microservice_event')
-    @mock.patch('zc_common.events.emit.save_to_s3file')
-    def test_event_emitted_from_received_index_rebuild_event_with_same_resource_type__pass(
-            self, mock_save_to_s3file, mock_emit_microservice_event):
-        s3_key = str(uuid.uuid4())
-        mock_save_to_s3file.return_value = s3_key
-
-        self.index_rebuild_event_task(resource_type=self.resource_type, meta={'batch_size': self.custom_batch_size})
-
-        total_events = int(math.ceil(self.objects_count / self.custom_batch_size))
-        events_count = 0
-
-        while events_count < total_events:
-            start_index = events_count * self.custom_batch_size
-            end_index = start_index + self.custom_batch_size
-
-            data = []
-
-            for instance in self._queryset.order_by('id')[start_index:end_index]:
-                instance_data = self.serializer.__func__(instance)
-
-                for attr in self.attributes:
-                    msg = 'Attribute {} not found in serialized model instance. data: {}'
-                    self.assertTrue(attr in instance_data, msg.format(attr, instance_data))
-
-                data.append(instance_data)
-
-            mock_save_to_s3file.assert_any_call(data, settings.AWS_INDEXER_BUCKET_NAME)
-
-            payload = event_payload(self.resource_type, None, None, {'s3_key': s3_key})
-            mock_emit_microservice_event.assert_any_call(self.event_name, **payload)
-
-            events_count += 1
 
     @mock.patch('zc_common.events.emit.emit_microservice_event')
     @mock.patch('zc_common.events.emit.save_to_s3file')
