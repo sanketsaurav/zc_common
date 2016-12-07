@@ -68,7 +68,7 @@ def emit_index_rebuild_event(event_name, resource_type, model, batch_size, seria
     Note: AWS_INDEXER_BUCKET_NAME must be present in your settings.
     """
 
-    if not queryset:
+    if queryset is not None:
         queryset = model.objects.all()
 
     objects_count = queryset.count()
