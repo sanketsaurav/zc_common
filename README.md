@@ -15,7 +15,7 @@ See the READMEs in submodules for more information.
 
 ### Deployment
 
-ZeroCater employees can find instructions [here](https://github.com/ZeroCater/mp-planning/blob/e9740ae6623cb2dfe3e9c1796872417d9dcefd42/devops/deploying_to_pypi.md)
+ZeroCater employees can find instructions [here](https://github.com/ZeroCater/mp-planning/blob/master/devops/deploying_to_pypi.md).
 
 ### Running tests
 
