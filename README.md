@@ -1,9 +1,9 @@
 ## zc_common
 
-#### Installation
+### Installation
 `pip install zc_common`
 
-#### Usage
+### Usage
 
 ```python
 from zc_common import timezone
@@ -11,12 +11,15 @@ from zc_common import timezone
 timezone.now()
 ```
 
-See the READMEs in submodules for relevant information.
+See the READMEs in submodules for more information.
 
-#### Running tests
+### Deployment
 
-You can now run your tests to make sure zc_common code behaves as 
-expected. To get started, follow these instructions:
+ZeroCater employees can find instructions [here](https://github.com/ZeroCater/mp-planning/blob/master/devops/deploying_to_pypi.md).
+
+### Running tests
+
+You can run tests to make sure zc_common code behaves as expected. To get started, follow these instructions:
 ```shell
 
 # Create a new python virtualenv and install dependencies
