@@ -1,6 +1,7 @@
 import ujson
 
 import datetime
+from decimal import Decimal
 from inflection import camelize, underscore, pluralize
 from rest_framework.test import APITestCase
 
@@ -63,6 +64,10 @@ class ResponseTestCase(APITestCase):
 
             elif isinstance(instance_attribute, datetime.time):
                 value = instance_attribute.isoformat()
+                self.assertEqual(instance_attributes[camelize(key, False)], value)
+
+            elif isinstance(instance_attribute, Decimal):
+                value = str(instance_attribute)
                 self.assertEqual(instance_attributes[camelize(key, False)], value)
 
             else:
