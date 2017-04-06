@@ -13,8 +13,9 @@ class User(object):
     """
 
     def __init__(self, **kwargs):
+        self.pk = kwargs.pop('pk', None) or kwargs.pop('id', None)
+        self.id = self.pk
         self.roles = []
-        self.companies = []
         self.company_permissions = {}
 
         for kwarg in kwargs:
