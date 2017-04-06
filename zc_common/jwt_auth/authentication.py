@@ -14,6 +14,9 @@ class User(object):
 
     def __init__(self, **kwargs):
         self.roles = []
+        self.companies = []
+        self.company_permissions = {}
+
         for kwarg in kwargs:
             setattr(self, kwarg, kwargs[kwarg])
 
@@ -27,6 +30,13 @@ class User(object):
         https://github.com/ZeroCater/mp-users/blob/master/users/models.py
         """
         return self.roles
+
+    def get_company_permissions(self):
+        """
+        For testing purposes only. Emulates `get_company_permissions` in
+        https://github.com/ZeroCater/mp-users/blob/master/users/models.py
+        """
+        return self.company_permissions
 
 
 class JWTAuthentication(BaseAuthentication):
