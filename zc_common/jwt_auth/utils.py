@@ -16,6 +16,7 @@ def jwt_payload_handler(user):
     payload = {
         'id': encoding.force_text(user.pk),
         'roles': user.get_roles(),
+        'companies': user.get_company_permissions(),
     }
 
     return payload
