@@ -166,6 +166,7 @@ class ResourceUpdateTestCase(object):
             reverse(self.resource_view_name, args=(self.resource.id,)),
             user_role=self.USER_ROLE,
             user_id=user_id,
+            company_permissions=getattr(self, 'company_permissions', {}),
             data=ujson.dumps(request_data),
             content_type='application/vnd.api+json'
         )
@@ -283,6 +284,7 @@ class ResourceUpdateLimitedPermissionTestCase(object):
             reverse(self.resource_view_name, args=(self.resource.id,)),
             user_role=self.USER_ROLE,
             user_id=user_id,
+            company_permissions=getattr(self, 'company_permissions', {}),
             data=ujson.dumps(request_data),
             content_type='application/vnd.api+json'
         )
@@ -388,7 +390,10 @@ class ResourceFlaggedDeleteTestCase(object):
 
     def test_resource(self):
         url = reverse(self.resource_view_name, args=(self.resource.id,))
-        response = self.client_delete_auth(url, user_role=self.USER_ROLE)
+        response = self.client_delete_auth(
+            url,
+            user_role=self.USER_ROLE,
+            company_permissions=getattr(self, 'company_permissions', {}))
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -419,7 +424,11 @@ class ResourceDeleteTestCase(object):
         self.assertEqual(resource.count(), 1)
 
         url = reverse(self.resource_view_name, args=(self.resource.id,))
-        response = self.client_delete_auth(url, user_role=self.USER_ROLE, user_id=self.resource.user.id)
+        response = self.client_delete_auth(
+            url,
+            user_role=self.USER_ROLE,
+            user_id=self.resource.user.id,
+            company_permissions=getattr(self, 'company_permissions', {}))
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -431,7 +440,10 @@ class ResourceDeleteTestCase(object):
         self.assertEqual(resource.count(), 1)
 
         url = reverse(self.resource_view_name, args=(self.resource.id,))
-        response = self.client_delete_auth(url, user_role=STAFF)
+        response = self.client_delete_auth(
+            url,
+            user_role=STAFF,
+            company_permissions=getattr(self, 'company_permissions', {}))
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
