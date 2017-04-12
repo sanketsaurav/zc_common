@@ -207,7 +207,9 @@ class ResponseTestCase(APITestCase):
         return "JWT {}".format(token)
 
     @staticmethod
-    def generate_user(roles, user_id='1', **kwargs):
+    def generate_user(roles, user_id=None, **kwargs):
+        if not user_id:
+            user_id = '1'
         return User(pk=user_id, roles=roles, **kwargs)
 
     def client_request_auth(self, method, url, *args, **kwargs):
