@@ -24,7 +24,7 @@ then
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
         {
-            twine upload $WHEEL
+            twine upload dist/$WHEEL
         } &> /dev/null
         echo "Upload complete."
     fi
