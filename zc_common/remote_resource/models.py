@@ -62,6 +62,7 @@ class RemoteForeignKey(models.CharField):
         return name, path, args, kwargs
 
     def contribute_to_class(self, cls, name, **kwargs):
+        self.set_attributes_from_name(name)
         self.name = name
         self.model = cls
         cls._meta.add_field(self, virtual=True)
