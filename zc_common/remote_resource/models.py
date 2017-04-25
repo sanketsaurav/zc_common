@@ -65,7 +65,7 @@ class RemoteForeignKey(models.CharField):
         self.set_attributes_from_name(name)
         self.name = name
         self.model = cls
-        cls._meta.add_field(self, virtual=True)
+        cls._meta.add_field(self)
 
         setattr(cls, name, self)
 
