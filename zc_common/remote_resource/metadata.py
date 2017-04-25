@@ -1,9 +1,8 @@
 from django.db.models.fields import related
 from rest_framework.utils.field_mapping import ClassLookupDict
 from rest_framework_json_api.metadata import JSONAPIMetadata
-
-from zc_common.remote_resource.models import GenericRemoteForeignKey
 from zc_common.remote_resource.relations import RemoteResourceField
+from zc_common.remote_resource.models import GenericRemoteForeignKey, RemoteForeignKey
 
 
 class RelationshipMetadata(JSONAPIMetadata):
@@ -11,7 +10,7 @@ class RelationshipMetadata(JSONAPIMetadata):
         related.ManyToManyDescriptor: 'ManyToMany',
         related.ReverseManyToOneDescriptor: 'OneToMany',
         related.ForwardManyToOneDescriptor: 'ManyToOne',
-        RemoteResourceField: 'ManyToOne',
+        RemoteForeignKey: 'ManyToOne',
         GenericRemoteForeignKey: 'ManyToOne'
     })
 
