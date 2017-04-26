@@ -27,9 +27,5 @@ class RelationshipMetadata(JSONAPIMetadata):
             field_info['relationship_resource'] = get_related_resource_type(field)
 
             if field_info['relationship_resource'] == 'RemoteResource':
-                if hasattr(model_field, 'type'):
-                    field_info['relationship_resource'] = model_field.type
-                else:
-                    # Generic FKs have no resource type
-                    field_info['relationship_resource'] = None
+                field_info['relationship_resource'] = model_field.type
         return field_info
