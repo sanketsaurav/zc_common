@@ -13,6 +13,14 @@ class RemoteResource(object):
 
 
 class RemoteForeignKey(models.CharField):
+    is_relation = True
+    many_to_many = False
+    many_to_one = True
+    one_to_many = False
+    one_to_one = False
+    related_model = None
+    remote_field = None
+
     description = "A foreign key pointing to an external resource"
 
     def __init__(self, type_name, *args, **kwargs):
@@ -53,6 +61,14 @@ class RemoteForeignKey(models.CharField):
 
         return name, path, args, kwargs
 
+    def contribute_to_class(self, cls, name, **kwargs):
+        self.set_attributes_from_name(name)
+        self.name = name
+        self.model = cls
+        cls._meta.add_field(self)
+
+        setattr(cls, name, self)
+
 
 class GenericRemoteForeignKey(object):
     """
@@ -77,7 +93,11 @@ class GenericRemoteForeignKey(object):
     related_model = None
     remote_field = None
 
-    def __init__(self, rt_field='resource_type', id_field='resource_id'):
+    def __init__(self, resource_types=None, rt_field='resource_type', id_field='resource_id'):
+        if resource_types is None:
+            raise TypeError('resource_types cannot be None')
+        self.resource_types = resource_types
+        self.type = resource_types  # For metadata class
         self.rt_field = rt_field
         self.id_field = id_field
         self.editable = False
@@ -137,6 +157,10 @@ class GenericRemoteForeignKey(object):
             if not isinstance(value, RemoteResource):
                 raise ValueError(
                     'GenericRemoteForeignKey only accepts RemoteResource objects as values'
+                )
+            if value.type not in self.resource_types:
+                raise ValueError(
+                    'Value must be of type {}, got {}'.format(self.resource_types, value.type)
                 )
             rt = value.type
             pk = value.id
