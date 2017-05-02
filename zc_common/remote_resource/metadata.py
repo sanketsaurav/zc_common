@@ -27,7 +27,7 @@ class RelationshipMetadata(JSONAPIMetadata):
             model_class = field.parent.Meta.model
             model_field = getattr(model_class, field.source)
 
-            if isinstance(model_field.field, OneToOneField):
+            if hasattr(model_field, 'field') and isinstance(model_field.field, OneToOneField):
                 # ForwardManyToOneDescriptor is used for OneToOneField also, so we have to override
                 model_field = model_field.field
 
