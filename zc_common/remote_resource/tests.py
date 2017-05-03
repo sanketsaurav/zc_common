@@ -157,19 +157,19 @@ class ResponseTestCase(APITestCase):
                     resource_pk = self.resource.pk if hasattr(self, 'resource') else '[0-9A-Za-z]*'
 
                     self.assertRegexpMatches(links['self'], r'^https?://.*/{}/{}/relationships/{}'.format(
-                        self.resource_name, resource_pk, underscore(relationship_name)))
+                        self.resource_name, resource_pk, self.get_relationship_name(relationship_name)))
 
                     if hasattr(self, 'remote_relationship_keys') \
                             and relationship_name in self.remote_relationship_keys:
                         self.assertRegexpMatches(links['related'], r'^https?://.*/{}/\w'.format(
-                            pluralize(underscore(self.get_remote_relationship_name(relationship_name)))))
+                            pluralize(self.get_relationship_name(relationship_name))))
                     else:
                         self.assertRegexpMatches(links['related'], r'^https?://.*/{}/{}/{}'.format(
-                            self.resource_name, resource_pk, underscore(relationship_name)))
+                            self.resource_name, resource_pk, self.get_relationship_name(relationship_name)))
 
-    def get_remote_relationship_name(self, relationship_name):
+    def get_relationship_name(self, relationship_name):
         """
-        If there are any remote relationships whose related link doesn't map
+        If there are any relationships whose related link doesn't map
         directly to its field name, a mapping dictionary can be declared on
         the test class named self.relationship_name_mapping.
 
@@ -181,7 +181,8 @@ class ResponseTestCase(APITestCase):
         """
         if hasattr(self, 'relationship_name_mapping') and self.relationship_name_mapping.get(relationship_name):
             return self.relationship_name_mapping[relationship_name]
-        return relationship_name
+        else:
+            return underscore(relationship_name)
 
     def failure_response_structure_test(self, response, status):
         self.assertEqual(response.status_code, status)
