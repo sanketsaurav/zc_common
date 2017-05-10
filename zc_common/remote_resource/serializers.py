@@ -46,3 +46,13 @@ class ResourceIdentifierObjectSerializer(serializers.BaseSerializer):
             self.fail('does_not_exist', pk_value=pk)
         except (TypeError, ValueError):
             self.fail('incorrect_type', data_type=type(data['pk']).__name__)
+
+
+class IncludedDict(dict):
+
+    def get(self, *args):
+        return lambda *a: True
+
+
+class RemoteResourceSerializer(object):
+    included_serializers = IncludedDict()
