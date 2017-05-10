@@ -4,6 +4,7 @@ Renderers
 import copy
 from collections import OrderedDict
 import os
+import ujson
 
 import inflection
 from django.db.models import Manager
@@ -16,10 +17,43 @@ from rest_framework_json_api import utils
 from rest_framework_json_api import renderers
 
 from zc_common.remote_resource.relations import RemoteResourceField
+from zc_events.exceptions import RequestTimeout
+
 
 core_module_name = os.environ.get('DJANGO_SETTINGS_MODULE').split('.')[0]
 core_module = __import__(core_module_name)
 event_client = core_module.event_client
+
+
+class RemoteResourceIncludeError(Exception):
+
+    def __init__(self, field, data=None):
+        self.field = field
+        self.message = "There was an error including the field {}".format(field)
+
+        data['meta'] = {'include_field': field}
+        self.data = [data]
+
+    def __str__(self):
+        return self.message
+
+
+class RemoteResourceIncludeTimeoutError(RemoteResourceIncludeError):
+
+    def __init__(self, field):
+        self.field = field
+        self.message = "Timeout error requesting remote resource {}".format(field)
+
+        self.data = [{
+            "status": "503",
+            "source": {
+                "pointer": "/data"
+            },
+            "meta": {
+                "include_field": field,
+            },
+            "detail": self.message
+        }]
 
 
 class JSONRenderer(renderers.JSONRenderer):
@@ -83,15 +117,27 @@ class JSONRenderer(renderers.JSONRenderer):
                 roles = request.user.roles
                 pk = serializer_data.get('id')
 
-                if not pk:
-                    continue
+                include = ",".join(new_included_resources)
+                try:
+                    remote_resource = event_client.get_remote_resource_data(
+                        field_name, pk=pk, user_id=user_id,
+                        include=include, page_size=1000, roles=roles)
 
-                remote_resource = event_client.get_remote_resource_data(
-                    field_name, pk=pk, user_id=user_id,
-                    include=new_included_resources, page_size=1000, roles=roles)
+                    body = ujson.loads(remote_resource['body'])
 
-                included_data.append(remote_resource['data'])
-                included_data.extend(remote_resource['included'])
+                    if 400 <= remote_resource['status'] < 600:
+                        raise RemoteResourceIncludeError(field_name, body["errors"][0])
+                except RequestTimeout:
+                    raise RemoteResourceIncludeTimeoutError(field_name)
+
+                included_data.append(body['data'])
+
+                if body.get('included'):
+                    included_data.extend(body['included'])
+
+                # We continue here since RemoteResourceField inherits
+                # form ResourceRelatedField which is a RelatedField
+                continue
 
             if isinstance(field, relations.ManyRelatedField):
                 serializer_class = included_serializers[field_name]
@@ -208,36 +254,40 @@ class JSONRenderer(renderers.JSONRenderer):
             # Extract root meta for any type of serializer
             json_api_meta.update(self.extract_root_meta(serializer, serializer_data))
 
-            if getattr(serializer, 'many', False):
-                json_api_data = list()
+            try:
+                if getattr(serializer, 'many', False):
+                    json_api_data = list()
 
-                for position in range(len(serializer_data)):
-                    resource = serializer_data[position]  # Get current resource
-                    resource_instance = serializer.instance[position]  # Get current instance
+                    for position in range(len(serializer_data)):
+                        resource = serializer_data[position]  # Get current resource
+                        resource_instance = serializer.instance[position]  # Get current instance
 
-                    json_resource_obj = self.build_json_resource_obj(
-                        fields, resource, resource_instance, resource_name)
-                    meta = self.extract_meta(serializer, resource)
+                        json_resource_obj = self.build_json_resource_obj(
+                            fields, resource, resource_instance, resource_name)
+                        meta = self.extract_meta(serializer, resource)
+                        if meta:
+                            json_resource_obj.update({'meta': utils.format_keys(meta)})
+                        json_api_data.append(json_resource_obj)
+
+                        included = self.extract_included(request, fields, resource,
+                                                         resource_instance, included_resources)
+                        if included:
+                            json_api_included.extend(included)
+                else:
+                    resource_instance = serializer.instance
+                    json_api_data = self.build_json_resource_obj(fields, serializer_data,
+                                                                 resource_instance, resource_name)
+
+                    meta = self.extract_meta(serializer, serializer_data)
                     if meta:
-                        json_resource_obj.update({'meta': utils.format_keys(meta)})
-                    json_api_data.append(json_resource_obj)
+                        json_api_data.update({'meta': utils.format_keys(meta)})
 
-                    included = self.extract_included(request, fields, resource, resource_instance, included_resources)
+                    included = self.extract_included(request, fields, serializer_data,
+                                                     resource_instance, included_resources)
                     if included:
                         json_api_included.extend(included)
-            else:
-                resource_instance = serializer.instance
-                json_api_data = self.build_json_resource_obj(fields, serializer_data,
-                                                             resource_instance, resource_name)
-
-                meta = self.extract_meta(serializer, serializer_data)
-                if meta:
-                    json_api_data.update({'meta': utils.format_keys(meta)})
-
-                included = self.extract_included(request, fields, serializer_data,
-                                                 resource_instance, included_resources)
-                if included:
-                    json_api_included.extend(included)
+            except RemoteResourceIncludeError as e:
+                return self.render_errors(e.data, accepted_media_type)
 
         # Make sure we render data in a specific order
         render_data = OrderedDict()
