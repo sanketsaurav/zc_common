@@ -1,1 +1,1 @@
-from authentication import JWTAuthentication
+from .authentication import JWTAuthentication

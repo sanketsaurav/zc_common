@@ -1,7 +1,7 @@
 import jwt
 from django.utils import encoding
 from rest_framework_jwt.settings import api_settings
-from permissions import SERVICE_ROLES
+from .permissions import SERVICE_ROLES
 
 
 def jwt_payload_handler(user):
