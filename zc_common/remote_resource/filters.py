@@ -3,17 +3,23 @@ from distutils.util import strtobool
 
 from django.db.models import BooleanField, FieldDoesNotExist
 from django.db.models.fields.related import ManyToManyField
-from rest_framework import filters
+from django.utils import six
+
+# DjangoFilterBackend was moved to django-filter and deprecated/moved from DRF in version 3.6
+try:
+    from rest_framework.filters import DjangoFilterBackend
+except ImportError:
+    from django_filters.rest_framework import DjangoFilterBackend
 
 
-class JSONAPIFilterBackend(filters.DjangoFilterBackend):
+class JSONAPIFilterBackend(DjangoFilterBackend):
     def filter_queryset(self, request, queryset, view):
         filter_class = self.get_filter_class(view, queryset)
         primary_key = queryset.model._meta.pk.name
 
         query_params = {}
 
-        for param, value in request.query_params.iteritems():
+        for param, value in six.iteritems(request.query_params):
             match = re.search(r'^filter\[(\w+)\]$', param)
             if match:
                 field_name = match.group(1)
