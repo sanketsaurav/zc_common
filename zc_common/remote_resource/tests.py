@@ -43,7 +43,11 @@ class ResponseTestCase(APITestCase):
 
     def validate_instance_in_data(self, data, instance, attributes, relationship_keys=None):
         self.assertTrue(
-            all(key in data for key in self.INSTANCE_TOP_LEVEL_KEYS))
+            all(key in data for key in self.INSTANCE_TOP_LEVEL_KEYS),
+            "Expected to find keys '{}' in data, found {} instead".format(
+                self.INSTANCE_TOP_LEVEL_KEYS, data.keys()
+            )
+        )
 
         instance_attributes = data['attributes']
         for key in attributes:
@@ -81,7 +85,7 @@ class ResponseTestCase(APITestCase):
 
         for relationship_name in relationship_keys:
             name = camelize(relationship_name, False)
-            self.assertTrue(name in relationships)
+            self.assertTrue(name in relationships, 'Expected {} as a relationship'.format(name))
             data = self.convert_to_list(relationships[name]['data'])
             instance_relationship = self.convert_to_list(
                 getattr(instance, relationship_name))

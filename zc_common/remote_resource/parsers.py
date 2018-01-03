@@ -1,9 +1,10 @@
 """
 Parsers
 """
+import ujson
+
 from rest_framework import parsers
 from rest_framework.exceptions import ParseError
-
 from rest_framework_json_api import utils, renderers, exceptions
 
 
@@ -58,7 +59,12 @@ class JSONParser(parsers.JSONParser):
         """
         Parses the incoming bytestream as JSON and returns the resulting data
         """
-        result = stream.raw_body
+        if hasattr(stream, 'raw_body'):
+            result = stream.raw_body
+        else:
+            # Handles requests created by Django's test client, which is missing the raw_body attribute set in
+            # the Django request-like object initialized by our zc_event event client
+            result = ujson.loads(stream.body)
 
         data = result.get('data')
 
