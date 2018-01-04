@@ -2,6 +2,7 @@ import ujson
 
 import datetime
 from decimal import Decimal
+from django.utils import six
 from inflection import camelize, underscore, pluralize
 from rest_framework.test import APITestCase
 
@@ -148,7 +149,7 @@ class ResponseTestCase(APITestCase):
                 self.assertTrue(
                     all(camelize(key, False) in relationships for key in relationship_keys))
 
-                for relationship_name, relationship in relationships.iteritems():
+                for relationship_name, relationship in six.iteritems(relationships):
                     self.assertTrue(
                         all(key in relationship for key in ['data', 'links']))
 
