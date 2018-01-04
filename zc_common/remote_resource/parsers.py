@@ -64,7 +64,10 @@ class JSONParser(parsers.JSONParser):
         else:
             # Handles requests created by Django's test client, which is missing the raw_body attribute set in
             # the Django request-like object initialized by our zc_event event client
-            result = ujson.loads(stream.body)
+            try:
+                result = ujson.loads(stream.body)
+            except ValueError:
+                result = {}
 
         data = result.get('data')
 

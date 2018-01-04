@@ -95,9 +95,12 @@ class ResponseTestCase(APITestCase):
                 self.assertEqual(data_object['id'], str(instance_object.id))
 
                 try:
-                    instance_type = instance_object.type
+                    instance_type = instance_object.__class__.JSONAPIMeta.resource_name
                 except AttributeError:
-                    instance_type = instance_object.__class__.__name__
+                    try:
+                        instance_type = instance_object.type
+                    except AttributeError:
+                        instance_type = instance_object.__class__.__name__
 
                 self.assertEqual(data_object['type'], instance_type)
 
