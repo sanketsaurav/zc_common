@@ -1,10 +1,11 @@
-import ujson
-
 import datetime
+
+import dateutil
 from decimal import Decimal
 from django.utils import six
 from inflection import camelize, underscore, pluralize
 from rest_framework.test import APITestCase
+import ujson
 
 from zc_common.jwt_auth.authentication import User
 from zc_common.jwt_auth.utils import jwt_payload_handler, jwt_encode_handler
@@ -59,9 +60,9 @@ class ResponseTestCase(APITestCase):
 
             if isinstance(instance_attribute, datetime.datetime):
                 value = instance_attribute.isoformat()
-                if value.endswith('+00:00'):
-                    value = value[:-6] + 'Z'
-                self.assertEqual(instance_attributes[camelize(key, False)], value)
+                parsed_attribute = dateutil.parser.parse(instance_attributes[camelize(key, False)])
+                parsed_value = dateutil.parser.parse(value)
+                self.assertEqual(parsed_attribute, parsed_value)
 
             elif isinstance(instance_attribute, datetime.date):
                 value = instance_attribute.isoformat()
