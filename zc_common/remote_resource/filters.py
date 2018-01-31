@@ -3,6 +3,7 @@ from distutils.util import strtobool
 
 from django.db.models import BooleanField, FieldDoesNotExist
 from django.db.models.fields.related import ManyToManyField
+from django_filters import filters
 from django.utils import six
 
 # DjangoFilterBackend was moved to django-filter and deprecated/moved from DRF in version 3.6
@@ -22,18 +23,19 @@ class JSONAPIFilterBackend(DjangoFilterBackend):
         for param, value in six.iteritems(request.query_params):
             match = re.search(r'^filter\[(\w+)\]$', param)
             if match:
-                field_name = match.group(1)
-                try:
-                    name, extra = field_name.split('__')
-                except ValueError:
-                    name = field_name
-                    extra = None
-                if name not in view.filter_fields.keys():
+                filter_string = match.group(1)
+                field_name = filter_string.split('__').pop(0)
+
+                if field_name not in view.filter_fields.keys():
                     return queryset.none()
-                if len(field_name) > 1 and field_name[:2] == 'id':
-                    query_params['{0}__{1}'.format(primary_key, extra)] = value
-                if hasattr(queryset.model, field_name)\
-                        and isinstance(getattr(queryset.model, field_name).field, ManyToManyField):
+
+                if len(filter_string) > 1 and field_name == 'id':
+                    filter_string_parts = filter_string.split('__')
+                    filter_string_parts[0] = primary_key
+                    query_params['__'.join(filter_string_parts)] = value
+
+                if hasattr(queryset.model, filter_string)\
+                   and isinstance(getattr(queryset.model, filter_string).field, ManyToManyField):
                     value = value.split(',')
 
                 # Allow 'true' or 'false' as values for boolean fields
@@ -43,7 +45,7 @@ class JSONAPIFilterBackend(DjangoFilterBackend):
                 except FieldDoesNotExist:
                     pass
 
-                query_params[field_name] = value
+                query_params[filter_string] = value
 
         if filter_class:
             return filter_class(query_params, queryset=queryset).qs
