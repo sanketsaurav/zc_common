@@ -30,5 +30,9 @@ setup(
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Topic :: Internet :: WWW/HTTP",
+    ],
+    install_requires=[
+        'python-dateutil>=2.6.1,<2.6.2',
+        'ujson>=1.35,<1.36',
     ]
 )
