@@ -3,7 +3,6 @@ from distutils.util import strtobool
 
 from django.db.models import BooleanField, FieldDoesNotExist
 from django.db.models.fields.related import ManyToManyField
-from django_filters import filters
 from django.utils import six
 
 # DjangoFilterBackend was moved to django-filter and deprecated/moved from DRF in version 3.6
