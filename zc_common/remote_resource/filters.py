@@ -33,9 +33,12 @@ class JSONAPIFilterBackend(DjangoFilterBackend):
                     filter_string_parts[0] = primary_key
                     query_params['__'.join(filter_string_parts)] = value
 
-                if hasattr(queryset.model, filter_string)\
-                   and isinstance(getattr(queryset.model, filter_string).field, ManyToManyField):
-                    value = value.split(',')
+                try:
+                    is_many_to_many_field = isinstance(getattr(queryset.model, filter_string).field, ManyToManyField)
+                    if is_many_to_many_field:
+                        value = value.split(',')
+                except AttributeError:
+                    pass
 
                 # Allow 'true' or 'false' as values for boolean fields
                 try:
