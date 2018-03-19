@@ -14,4 +14,3 @@ class UtilsTest(TestCase):
 
         self.assertIn('id', payload)
         self.assertIn('roles', payload)
-        self.assertIn('companies', payload)
