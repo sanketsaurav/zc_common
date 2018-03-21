@@ -21,7 +21,7 @@ setup(
     author='ZeroCater',
     author_email='tech@zerocater.com',
     url='https://github.com/ZeroCater/zc_common',
-    download_url='https://github.com/ZeroCater/zc_common/tarball/0.4.7',
+    download_url='https://github.com/ZeroCater/zc_common/tarball/0.4.8',
     license='MIT',
     packages=get_packages('zc_common'),
     classifiers=[
