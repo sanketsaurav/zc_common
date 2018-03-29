@@ -1,14 +1,20 @@
 import re
 from distutils.util import strtobool
+import logging
 
 from django.db.models import BooleanField, FieldDoesNotExist
 from django.db.models.fields.related import ManyToManyField
 from django.utils import six
 
+logger = logging.getLogger('django')
+
+
 # DjangoFilterBackend was moved to django-filter and deprecated/moved from DRF in version 3.6
 try:
+    logger.info('django filter backend import try #1')
     from rest_framework.filters import DjangoFilterBackend
 except ImportError:
+    logger.info('django filter backend import try #2')
     from django_filters.rest_framework import DjangoFilterBackend
 
 
