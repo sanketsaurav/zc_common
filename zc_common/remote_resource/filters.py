@@ -31,6 +31,8 @@ class JSONAPIFilterBackend(DjangoFilterBackend):
                 filter_string = match.group(1)
                 field_name = filter_string.split('__').pop(0)
 
+                logger.info('JSONAPIFilterBackend.filter_queryset - param: {}, value: {}, view.filter_fields: {}'.format(param, value, view.filter_fields))
+
                 if field_name not in view.filter_fields.keys():
                     return queryset.none()
 
