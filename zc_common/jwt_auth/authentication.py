@@ -32,13 +32,6 @@ class User(object):
         """
         return self.roles
 
-    def get_company_permissions(self):
-        """
-        For testing purposes only. Emulates `get_company_permissions` in
-        https://github.com/ZeroCater/mp-users/blob/master/users/models.py
-        """
-        return self.company_permissions
-
 
 class JWTAuthentication(BaseAuthentication):
     """
