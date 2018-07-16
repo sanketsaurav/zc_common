@@ -25,7 +25,7 @@ You can run tests to make sure zc_common code behaves as expected. To get starte
 # Create a new python virtualenv and install dependencies
 mkvirtualenv zc_common
 workon zc_common
-pip install -r requirements
+pip install -r requirements.txt
 
 # Run the tests
 python runtests.py
