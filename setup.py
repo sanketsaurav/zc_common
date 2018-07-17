@@ -34,5 +34,7 @@ setup(
     install_requires=[
         'python-dateutil>=2.6.1,<2.6.2',
         'ujson>=1.35,<1.36',
+        'PyJWT>=1.6.4',
+        'inflection>=0.3.1'
     ]
 )
