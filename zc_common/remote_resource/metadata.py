@@ -1,6 +1,7 @@
 from django.db.models import OneToOneField
 from django.db.models.fields import related
 from rest_framework.relations import ManyRelatedField
+from rest_framework.serializers import DecimalField
 from rest_framework.utils.field_mapping import ClassLookupDict
 from rest_framework_json_api.metadata import JSONAPIMetadata
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -36,4 +37,7 @@ class RelationshipMetadata(JSONAPIMetadata):
 
             if field_info['relationship_resource'] == 'RemoteResource':
                 field_info['relationship_resource'] = model_field.type
+
+        if isinstance(field, DecimalField):
+            field_info['decimal_places'] = getattr(field, 'decimal_places', 2)
         return field_info
