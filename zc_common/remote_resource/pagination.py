@@ -54,7 +54,7 @@ class PageNumberPagination(OldPagination):
     """
 
     page_size_query_param = 'page_size'
-    max_page_size = 100
+    max_page_size = 1000
 
     def build_link(self, index):
         if not index:
