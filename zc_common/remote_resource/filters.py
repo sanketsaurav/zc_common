@@ -54,14 +54,14 @@ class JSONAPIFilterBackend(DjangoFilterBackend):
     #   ?filter[price__gte]=100
     #   ?filter[relatedobject__relatedobject]=1
     #   ?filter[relatedobject__relatedobject__in]=1,2,3
+    #   ?filter[delivery_days__contains]=true  # filtering on ArrayField
+    #   ?filter[active]=1  # filtering on Boolean values of 1, 0, true or false
     def _parse_filter_string(self, queryset, filter_class, filter_string, filter_value):
         filter_string_parts = filter_string.split('__')
         if len(filter_string_parts) > 1:
             field_name = '__'.join(filter_string_parts[:-1])
         else:
             field_name = filter_string_parts[0]
-
-        filterset_data = []
 
         # Translates the 'id' in ?filter[id]= into the primary key identifier, e.g. 'pk'
         if field_name == 'id':
@@ -76,7 +76,6 @@ class JSONAPIFilterBackend(DjangoFilterBackend):
             pass
 
         try:
-            field_name = filter_string.split('__')[0]
             field_filter = filter_class.get_filters().get(field_name, None)
             is_array_filter = isinstance(field_filter, ArrayFilter)
             if is_array_filter:
@@ -91,29 +90,31 @@ class JSONAPIFilterBackend(DjangoFilterBackend):
         except FieldDoesNotExist:
             pass
 
-        filterset_data.append({
+        filterset_data = {
             'field_name': field_name,
             'field_name_with_lookup': filter_string,
             'filter_value': filter_value
-        })
+        }
 
         return filterset_data
 
     def filter_queryset(self, request, queryset, view):
         filter_class = self.get_filter_class(view, queryset)
 
+        filters = []
         for param, value in six.iteritems(request.query_params):
             match = re.search(r'^filter\[(\w+)\]$', param)
             if match:
                 filter_string = match.group(1)
-                filters = self._parse_filter_string(queryset, filter_class, filter_string, value)
+                parsed_filter_string = self._parse_filter_string(queryset, filter_class, filter_string, value)
+                filters.append(parsed_filter_string)
 
                 for filter_ in filters:
                     if filter_['field_name'] not in view.filter_fields.keys():
                         return queryset.none()
 
-                filterset_data = {filter_['field_name_with_lookup']: filter_['filter_value'] for filter_ in filters}
-                if filter_class:
-                    return filter_class(filterset_data, queryset=queryset).qs
+        filterset_data = {filter_['field_name_with_lookup']: filter_['filter_value'] for filter_ in filters}
+        if filter_class:
+            return filter_class(filterset_data, queryset=queryset).qs
 
         return queryset
