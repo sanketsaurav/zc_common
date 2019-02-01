@@ -122,9 +122,9 @@ def timezone_abbrv_mappings():
 
 
 def _get_datetime_from_ambiguous_value(value):
-    if type(value) is python_datetime.datetime:
+    if isinstance(value, python_datetime.datetime):
         new_datetime = localtime(value, tz=value.tzinfo)
-    elif type(value) is python_datetime.tzinfo:
+    elif isinstance(value, python_datetime.tzinfo):
         new_datetime = now(tz=value)
     else:
         raise Exception('value was not a timezone or a date, it was: %s' % type(value))
