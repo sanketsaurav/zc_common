@@ -14,14 +14,14 @@ def get_packages(package):
 
 setup(
     name='zc_common',
-    version='0.4.14',
+    version='0.4.15',
     description="Shared code for ZeroCater microservices",
     long_description='',
     keywords='zerocater python util',
     author='ZeroCater',
     author_email='tech@zerocater.com',
     url='https://github.com/ZeroCater/zc_common',
-    download_url='https://github.com/ZeroCater/zc_common/tarball/0.4.14',
+    download_url='https://github.com/ZeroCater/zc_common/tarball/0.4.15',
     license='MIT',
     packages=get_packages('zc_common'),
     classifiers=[
@@ -35,6 +35,8 @@ setup(
         'python-dateutil>=2.6.1,<2.6.2',
         'ujson>=1.35,<1.36',
         'PyJWT>=1.6.4',
-        'inflection>=0.3.1'
+        'inflection>=0.3.1',
+        'pytz>=2018.9',
+        'python-dateutil>=2.7.3'
     ]
 )
