@@ -12,17 +12,13 @@ from django.utils import timezone
 from zc_common import timezone as common_timezone
 
 
-class TestDjangoTimezoneOverride(TestCase):
-    def test_should_call_overriden_methods(self):
-        # Passing in timezone is not part of django.utils.timezone.now
-        outcome = common_timezone.now(tz=pytz.utc)
-        expected = timezone.now()
-        self.assertEqual(expected.replace(microsecond=0), outcome.replace(microsecond=0))
+class TimezoneTest(object):
+    from django.utils.timezone import *
 
-    def test_should_call_methods_not_overriden(self):
-        # get_current_timezone is not overriden
-        self.assertEqual(timezone.get_current_timezone(), common_timezone.get_current_timezone())
+    from zc_common.timezone import is_business_day
 
+    # Override with zc_common
+    from zc_common.timezone import *  # pylint: disable=wildcard-import
 
 class TestTimezoneNow(TestCase):
     def test_getting_back_expected_timezone_by_default(self):

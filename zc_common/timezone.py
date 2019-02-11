@@ -11,6 +11,15 @@ timezone.get_current_timezone()
 import datetime as python_datetime
 
 
+def is_aware(time):
+    return time.utcoffset() is not None
+
+
+def get_current_timezone():
+    from django.utils.timezone import get_current_timezone
+    return get_current_timezone()
+
+
 def now(tz=None):
     """
     Just like django.utils.timezone.now(), except:
@@ -63,6 +72,11 @@ def localtime(value, tz=None):
         # This method is available for pytz time zones.
         value = tz.normalize(value)
     return value
+
+
+def deactivate():
+    from django.utils.timezone import deactivate
+    deactivate()
 
 
 def activate(value):
@@ -136,7 +150,7 @@ def combine(date, time, tz=None):
     Like datetime.datetime.combine, but make it aware.
     Prefers timzeone that is passed in, followed by time.tzinfo, and then get_current_timezone
     """
-    from django.utils.timezone import is_aware, make_aware
+    from django.utils.timezone import make_aware
 
     if tz is None:
         tz = time.tzinfo
@@ -148,7 +162,7 @@ def combine(date, time, tz=None):
 def parse(date_string, **kwargs):
     """ A wrapper around python-dateutil's parse function which ensures it always returns an aware datetime """
     from dateutil.parser import parse as datetime_parser
-    from django.utils.timezone import is_aware, make_aware
+    from django.utils.timezone import make_aware
 
     parsed = datetime_parser(date_string, **kwargs)
     # Make aware
@@ -354,7 +368,6 @@ def _get_tz(tz=None):
 def convert_to_timestamp(dt):
     import calendar
     import pytz
-    from django.utils.timezone import is_aware
     if is_aware(dt):
         if dt.tzinfo != pytz.utc:
             dt = dt.astimezone(pytz.utc)
