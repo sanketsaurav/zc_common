@@ -5,3 +5,5 @@ uritemplate==0.6
 inflection==0.3.1
 requests==2.20.0
 mock==2.0.0
+pytz==2018.9
+python-dateutil==2.6.1
