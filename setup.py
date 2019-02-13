@@ -32,11 +32,11 @@ setup(
         "Topic :: Internet :: WWW/HTTP",
     ],
     install_requires=[
-        'python-dateutil>=2.6.1,<2.6.2',
+        'python-dateutil>=2.6.1',
         'ujson>=1.35,<1.36',
         'PyJWT>=1.6.4',
         'inflection>=0.3.1',
-        'pytz>=2018.9',
+        'pytz>=2014.2',
         'python-dateutil>=2.7.3'
     ]
 )
