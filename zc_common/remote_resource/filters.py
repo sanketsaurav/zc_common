@@ -3,7 +3,7 @@ from distutils.util import strtobool
 
 from django.contrib.postgres.forms import SimpleArrayField
 from django.contrib.postgres.fields import ArrayField
-from django.db.models import BooleanField, FieldDoesNotExist
+from django.db.models import BooleanField, FieldDoesNotExist, ForeignKey
 from django.db.models.fields.related import ManyToManyField
 from django import forms
 from django.utils import six
@@ -12,10 +12,18 @@ from django.utils import six
 try:
     from rest_framework.filters import DjangoFilterBackend, Filter
     from rest_framework import filterset
+    from rest_framework.compat import get_related_model as remote_model
 except ImportError:
-    from django_filters.rest_framework import DjangoFilterBackend
+    from django_filters.compat import remote_model
+    from django_filters.rest_framework import DjangoFilterBackend, filterset
     from django_filters.rest_framework.filters import Filter
-    from django_filters.rest_framework import filterset
+    from django_filters.filters import ModelChoiceFilter
+
+
+def remote_queryset(field):
+    model = remote_model(field)
+    limit_choices_to = field.get_limit_choices_to()
+    return model._base_manager.complex_filter(limit_choices_to)
 
 
 class ArrayFilter(Filter):
@@ -38,7 +46,15 @@ class JSONAPIFilterSet(filterset.FilterSet):
                 'extra': lambda f: {
                     'lookup_expr': 'contains',
                 }
-            }
+            },
+            # Overrides default definition in django_filters to allow us to use our own definition of
+            # `remote_queryset`, which looks up allowable values via `_base_manager` rather than `_default_manager`
+            ForeignKey: {
+                'filter_class': ModelChoiceFilter,
+                'extra': lambda f: {
+                    'queryset': remote_queryset(f),
+                }
+            },
         }
 
 
