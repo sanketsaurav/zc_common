@@ -316,7 +316,7 @@ class JSONRenderer(renderers.JSONRenderer):
             render_data['included'] = sorted(unique_compound_documents, key=lambda item: (item['type'], item['id']))
 
         if json_api_meta:
-            render_data['meta'] = utils.format_keys(json_api_meta)
+            render_data['meta'] = key_formatter()(json_api_meta)
 
         return super(renderers.JSONRenderer, self).render(
             render_data, accepted_media_type, renderer_context

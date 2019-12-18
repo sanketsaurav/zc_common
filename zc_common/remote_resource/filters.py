@@ -12,16 +12,29 @@ from django.utils import six
 try:
     from rest_framework.filters import DjangoFilterBackend, Filter
     from rest_framework import filterset
-    from rest_framework.compat import get_related_model as remote_model
 except ImportError:
-    from django_filters.compat import remote_model
     from django_filters.rest_framework import DjangoFilterBackend, filterset
     from django_filters.rest_framework.filters import Filter
     from django_filters.filters import ModelChoiceFilter
 
+# remote_model() was removed from django_filters in 2.0
+try:
+    try:
+        from rest_framework.compat import get_related_model as remote_model
+    except ImportError:
+        from django_filters.compat import remote_model
+except:
+    pass
+
+
 
 def remote_queryset(field):
-    model = remote_model(field)
+    # remote_model() was removed from django_filters in 2.0
+    try:
+        model = remote_model(field)
+    except:
+        model = field.remote_field.model
+
     limit_choices_to = field.get_limit_choices_to()
     return model._base_manager.complex_filter(limit_choices_to)
 
