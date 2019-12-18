@@ -27,7 +27,6 @@ except:
     pass
 
 
-
 def remote_queryset(field):
     # remote_model() was removed from django_filters in 2.0
     try:

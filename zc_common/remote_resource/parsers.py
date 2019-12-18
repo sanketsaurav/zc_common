@@ -12,7 +12,7 @@ from rest_framework_json_api import utils, renderers, exceptions
 def key_formatter():
     try:
         return utils.format_field_names
-    except ImportError:
+    except AttributeError:
         return utils.format_keys
 
 

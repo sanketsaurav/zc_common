@@ -25,6 +25,14 @@ core_module = __import__(core_module_name)
 event_client = core_module.event_client
 
 
+# `format_keys()` was replaced with `format_field_names()` from rest_framework_json_api in 3.0.0
+def key_formatter():
+    try:
+        return utils.format_field_names
+    except AttributeError:
+        return utils.format_keys
+
+
 class RemoteResourceIncludeError(Exception):
 
     def __init__(self, field, data=None):
@@ -199,7 +207,7 @@ class JSONRenderer(renderers.JSONRenderer):
                         )
                     )
 
-        return utils.format_keys(included_data)
+        return key_formatter()(included_data)
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
 
@@ -266,7 +274,7 @@ class JSONRenderer(renderers.JSONRenderer):
                             fields, resource, resource_instance, resource_name)
                         meta = self.extract_meta(serializer, resource)
                         if meta:
-                            json_resource_obj.update({'meta': utils.format_keys(meta)})
+                            json_resource_obj.update({'meta': key_formatter()(meta)})
                         json_api_data.append(json_resource_obj)
 
                         included = self.extract_included(request, fields, resource,
@@ -280,7 +288,7 @@ class JSONRenderer(renderers.JSONRenderer):
 
                     meta = self.extract_meta(serializer, serializer_data)
                     if meta:
-                        json_api_data.update({'meta': utils.format_keys(meta)})
+                        json_api_data.update({'meta': key_formatter()(meta)})
 
                     included = self.extract_included(request, fields, serializer_data,
                                                      resource_instance, included_resources)
