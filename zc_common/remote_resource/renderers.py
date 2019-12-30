@@ -17,6 +17,7 @@ from rest_framework_json_api import utils
 from rest_framework_json_api import renderers
 
 from zc_common.remote_resource.relations import RemoteResourceField
+from zc_common.remote_resource import utils as zc_common_utils
 from zc_events.exceptions import RequestTimeout
 
 
@@ -28,7 +29,7 @@ event_client = core_module.event_client
 # `format_keys()` was replaced with `format_field_names()` from rest_framework_json_api in 3.0.0
 def key_formatter():
     try:
-        return utils.format_field_names
+        return zc_common_utils.format_keys
     except AttributeError:
         return utils.format_keys
 
@@ -69,6 +70,41 @@ class JSONRenderer(renderers.JSONRenderer):
     This is s modification of renderers in (v 2.2)
     https://github.com/django-json-api/django-rest-framework-json-api
     """
+    @classmethod
+    def extract_attributes(cls, fields, resource):
+        """
+        @amberylx 2020-01-10: Copied from djangorestframework-jsonapi v3.0.0 in order to override the call to
+        `utils.format_field_names(data)` to our own function of `format_keys()`, which is a copy of the library's
+        old (pre-v3.0) function.
+        """
+        data = OrderedDict()
+        for field_name, field in iter(fields.items()):
+            # ID is always provided in the root of JSON API so remove it from attributes
+            if field_name == 'id':
+                continue
+            # don't output a key for write only fields
+            if fields[field_name].write_only:
+                continue
+            # Skip fields with relations
+            if isinstance(
+                    field, (relations.RelatedField, relations.ManyRelatedField, BaseSerializer)
+            ):
+                continue
+
+            # Skip read_only attribute fields when `resource` is an empty
+            # serializer. Prevents the "Raw Data" form of the browsable API
+            # from rendering `"foo": null` for read only fields
+            try:
+                resource[field_name]
+            except KeyError:
+                if fields[field_name].read_only:
+                    continue
+
+            data.update({
+                field_name: resource.get(field_name)
+            })
+
+        return key_formatter()(data)
 
     @classmethod
     def extract_included(cls, request, fields, resource, resource_instance, included_resources):

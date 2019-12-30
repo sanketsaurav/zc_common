@@ -7,11 +7,13 @@ from rest_framework import parsers
 from rest_framework.exceptions import ParseError
 from rest_framework_json_api import utils, renderers, exceptions
 
+from zc_common.remote_resource import utils as zc_common_utils
+
 
 # `format_keys()` was replaced with `format_field_names()` from rest_framework_json_api in 3.0.0
 def key_formatter():
     try:
-        return utils.format_field_names
+        return zc_common_utils.format_keys
     except AttributeError:
         return utils.format_keys
 
