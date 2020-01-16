@@ -7,6 +7,16 @@ from rest_framework import parsers
 from rest_framework.exceptions import ParseError
 from rest_framework_json_api import utils, renderers, exceptions
 
+from zc_common.remote_resource import utils as zc_common_utils
+
+
+# `format_keys()` was replaced with `format_field_names()` from rest_framework_json_api in 3.0.0
+def key_formatter():
+    try:
+        return zc_common_utils.format_keys
+    except AttributeError:
+        return utils.format_keys
+
 
 class JSONParser(parsers.JSONParser):
     """
@@ -30,11 +40,11 @@ class JSONParser(parsers.JSONParser):
 
     @staticmethod
     def parse_attributes(data):
-        return utils.format_keys(data.get('attributes'), 'underscore') if data.get('attributes') else dict()
+        return key_formatter()(data.get('attributes'), 'underscore') if data.get('attributes') else dict()
 
     @staticmethod
     def parse_relationships(data):
-        relationships = (utils.format_keys(data.get('relationships'), 'underscore')
+        relationships = (key_formatter()(data.get('relationships'), 'underscore')
                          if data.get('relationships') else dict())
 
         # Parse the relationships

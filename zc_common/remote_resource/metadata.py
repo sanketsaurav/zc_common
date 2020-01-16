@@ -1,7 +1,10 @@
+from collections import OrderedDict
+
 from django.db.models import OneToOneField
 from django.db.models.fields import related
 from rest_framework.relations import ManyRelatedField
 from rest_framework.serializers import DecimalField
+from rest_framework.settings import api_settings
 from rest_framework.utils.field_mapping import ClassLookupDict
 from rest_framework_json_api.metadata import JSONAPIMetadata
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -21,6 +24,24 @@ class RelationshipMetadata(JSONAPIMetadata):
         RemoteForeignKey: 'ManyToOne',
         GenericRemoteForeignKey: 'ManyToOne'
     })
+
+    def get_serializer_info(self, serializer):
+        """
+        @amberylx 2020-01-10: Copied from djangorestframework-jsonapi v2.2.0 in order to remove the call to
+        `format_value` on the keys of the metadata object.
+        """
+        if hasattr(serializer, 'child'):
+            # If this is a `ListSerializer` then we want to examine the
+            # underlying child serializer instance instead.
+            serializer = serializer.child
+
+        # Remove the URL field if present
+        serializer.fields.pop(api_settings.URL_FIELD_NAME, None)
+
+        return OrderedDict([
+            (field_name, self.get_field_info(field))
+            for field_name, field in serializer.fields.items()
+        ])
 
     def get_field_info(self, field):
         field_info = super(RelationshipMetadata, self).get_field_info(field)
